@@ -26,3 +26,6 @@ add_library(GraphicsMapLib SHARED
 target_link_libraries(GraphicsMapLib PRIVATE Qt5::Widgets Qt5::Positioning)
 
 target_compile_definitions(GraphicsMapLib PRIVATE GRAPHICSMAPLIB_LIBRARY)
+
+#
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION install)
