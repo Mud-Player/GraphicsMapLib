@@ -12,7 +12,6 @@
 MapPolygonItem::MapPolygonItem() :
     m_editable(true)
 {
-    addToGroup(&m_polygon);
 }
 
 void MapPolygonItem::setEditable(const bool &editable)
@@ -88,7 +87,6 @@ bool MapPolygonItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
 {
     if(!m_editable)
         return false;
-    qDebug()<<event;
     auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(watched);
     switch (event->type()) {
     case QEvent::GraphicsSceneMouseMove:
@@ -98,7 +96,7 @@ bool MapPolygonItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
         int index = m_ctrlPoints.indexOf(ctrlPoint);
         // actully, the finally event which release event will adjust the correct position
         m_points.replace(index, watched->pos());
-        m_polygon.setPolygon(m_points);
+        this->setPolygon(m_points);
         // it's required to updadte the scene transform result
         auto scenePos = watched->pos();
         m_coords.replace(index, GraphicsMap::toCoordinate(scenePos));
@@ -126,13 +124,13 @@ bool MapPolygonItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
 void MapPolygonItem::updatePolygon()
 {
     // Reset polygon data to QGraphicsPolygonItem
-    m_polygon.setPolygon(m_points);
+    this->setPolygon(m_points);
 
     // Create new control point or Remove unused control point
     if(m_ctrlPoints.size() < m_points.size()) { // Create
         for(int i = m_ctrlPoints.size(); i < m_points.size(); ++i) {
             auto ctrlPoint = new QGraphicsEllipseItem;
-            addToGroup(ctrlPoint);  //addToGroup should be head of installSceneEventFilter
+            ctrlPoint->setParentItem(this);
             //
             ctrlPoint->setAcceptHoverEvents(true);
             ctrlPoint->setPen(QPen(Qt::gray));
@@ -164,10 +162,10 @@ void MapPolygonItem::updatePolygon()
 
 void MapPolygonItem::updateEditable()
 {
-    auto pen = m_polygon.pen();
+    auto pen = this->pen();
     pen.setWidth(0);
     pen.setColor(m_editable ? Qt::white : Qt::lightGray);
-    m_polygon.setPen(pen);
+    this->setPen(pen);
 
     for(auto &ctrlPoint : m_ctrlPoints) {
         ctrlPoint->setVisible(m_editable);

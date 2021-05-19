@@ -10,7 +10,7 @@
 /*!
  * \brief 多边形
  */
-class GRAPHICSMAPLIB_EXPORT MapPolygonItem : public QObject, public QGraphicsItemGroup
+class GRAPHICSMAPLIB_EXPORT MapPolygonItem : public QObject, public QGraphicsPolygonItem
 {
     Q_OBJECT
 public:
@@ -46,7 +46,6 @@ private:
     QVector<QGeoCoordinate>      m_coords;     ///< 经纬点列表
     QVector<QPointF>             m_points;     ///< 场景坐标点列表
     //
-    QGraphicsPolygonItem         m_polygon;    ///< 多边形元素
     QVector<QGraphicsEllipseItem*> m_ctrlPoints; ///< 控制点(圆点)
 };
 
