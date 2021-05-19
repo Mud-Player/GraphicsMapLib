@@ -71,18 +71,28 @@ void MapEllipseItem::setRect(const QGeoCoordinate &first, const QGeoCoordinate &
 
 void MapEllipseItem::updateEllipse()
 {
+    // update ellipse outlook
     auto leftCoord = m_center.atDistanceAndAzimuth(m_size.width()/2, -90);
     auto topCoord = m_center.atDistanceAndAzimuth(m_size.height()/2, 0);
-    auto center = MudMap::fromCoordinate(m_center);
-    auto left = MudMap::fromCoordinate(leftCoord);
-    auto top = MudMap::fromCoordinate(topCoord);
+    auto center = GraphicsMap::fromCoordinate(m_center);
+    auto left = GraphicsMap::fromCoordinate(leftCoord);
+    auto top = GraphicsMap::fromCoordinate(topCoord);
     auto halfWidth = left.x() - center.x();
     auto halfHeight = top.y() - center.y();
     QGraphicsEllipseItem::setRect(-halfWidth, -halfHeight, 2 * halfWidth, 2*halfHeight);
     setPos(center);
+    // update ellipse's contorl points
+    QGeoCoordinate topLeft(topCoord.latitude(), leftCoord.longitude());
+//    QGeoCoordinate bottomRight(bottomCoord.latitude(), leftCoord.longitude());
 }
 
 void MapEllipseItem::updateEditable()
 {
+    auto pen = this->pen();
+    pen.setWidth(0);
+    pen.setColor(m_editable ? Qt::white : Qt::lightGray);
+    setPen(pen);
 
+    m_topLeftCtrl.setVisible(m_editable);
+    m_bottomRightCtrl.setVisible(m_editable);
 }

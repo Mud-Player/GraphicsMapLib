@@ -12,6 +12,7 @@
 MapPolygonItem::MapPolygonItem() :
     m_editable(true)
 {
+    addToGroup(&m_polygon);
 }
 
 void MapPolygonItem::setEditable(const bool &editable)
@@ -26,7 +27,12 @@ void MapPolygonItem::setEditable(const bool &editable)
 void MapPolygonItem::addCoordinate(const QGeoCoordinate &coord)
 {
     m_coords.append(coord);
+    // Adding scene point
+    auto point = GraphicsMap::fromCoordinate(coord);
+    m_points.append(point);
     updatePolygon();
+    //
+    emit added(m_points.size()-1, coord);
 }
 
 void MapPolygonItem::replaceCoordinate(const int &index, const QGeoCoordinate &coord)
@@ -34,25 +40,43 @@ void MapPolygonItem::replaceCoordinate(const int &index, const QGeoCoordinate &c
     if(m_coords.at(index) == coord)
         return;
     m_coords.replace(index, coord);
+    // Modify scene point
+    auto point = GraphicsMap::fromCoordinate(coord);
+    m_points.replace(index, point);
     updatePolygon();
+    //
+    emit updated(index, coord);
 }
 
 void MapPolygonItem::removeCoordinate(const int &index)
 {
+    auto coord = m_coords.at(index);
     m_coords.removeAt(index);
+    m_points.removeAt(index);
+    //
     updatePolygon();
+    //
+    emit removed(index, coord);
 }
 
-void MapPolygonItem::setCoordinates(const QList<QGeoCoordinate> &coords)
+void MapPolygonItem::setCoordinates(const QVector<QGeoCoordinate> &coords)
 {
     if(m_coords == coords)
         return;
 
+    // Change previous coords and points
     m_coords = coords;
+    m_points.clear();
+    for(auto &coord : coords) {
+        auto point = GraphicsMap::fromCoordinate(coord);
+        m_points.append(point);
+    }
     updatePolygon();
+    //
+    emit changed();
 }
 
-const QList<QGeoCoordinate> &MapPolygonItem::coordinates() const
+const QVector<QGeoCoordinate> &MapPolygonItem::coordinates() const
 {
     return m_coords;
 }
@@ -64,6 +88,7 @@ bool MapPolygonItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
 {
     if(!m_editable)
         return false;
+    qDebug()<<event;
     auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(watched);
     switch (event->type()) {
     case QEvent::GraphicsSceneMouseMove:
@@ -71,13 +96,12 @@ bool MapPolygonItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
     {
         // get the index which respond to polygon edge point
         int index = m_ctrlPoints.indexOf(ctrlPoint);
-        auto polygon = this->polygon();
         // actully, the finally event which release event will adjust the correct position
-        polygon.replace(index, watched->pos());
-        setPolygon(polygon);
-        // it's required to updadte the local result
-        auto scenePos = watched->pos() + m_center;
-        m_coords.replace(index, MudMap::toCoordinate(scenePos));
+        m_points.replace(index, watched->pos());
+        m_polygon.setPolygon(m_points);
+        // it's required to updadte the scene transform result
+        auto scenePos = watched->pos();
+        m_coords.replace(index, GraphicsMap::toCoordinate(scenePos));
         break;
     }
     case QEvent::GraphicsSceneHoverEnter:
@@ -101,52 +125,49 @@ bool MapPolygonItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
 
 void MapPolygonItem::updatePolygon()
 {
-    QPolygonF posPath;
-    for(auto &coord : m_coords) {
-        posPath.append(MudMap::fromCoordinate(coord));
-    }
-    // We have to move all points to around center
-    // Which help us to implement the fix-scale function
-    auto center = posPath.boundingRect().center();
-    for(auto &pos : posPath) {
-        pos -= center;
-    }
-    QGraphicsPolygonItem::setPolygon(posPath);
-    setPos(center);
+    // Reset polygon data to QGraphicsPolygonItem
+    m_polygon.setPolygon(m_points);
 
-    // Clear control points, and set control points
-    for(auto &ctrlPoint : m_ctrlPoints) {
-        delete ctrlPoint;
+    // Create new control point or Remove unused control point
+    if(m_ctrlPoints.size() < m_points.size()) { // Create
+        for(int i = m_ctrlPoints.size(); i < m_points.size(); ++i) {
+            auto ctrlPoint = new QGraphicsEllipseItem;
+            addToGroup(ctrlPoint);  //addToGroup should be head of installSceneEventFilter
+            //
+            ctrlPoint->setAcceptHoverEvents(true);
+            ctrlPoint->setPen(QPen(Qt::gray));
+            ctrlPoint->setBrush(Qt::lightGray);
+            ctrlPoint->setCursor(Qt::DragMoveCursor);
+            ctrlPoint->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+            ctrlPoint->setFlag(QGraphicsItem::ItemIsMovable);
+            ctrlPoint->setCursor(Qt::DragMoveCursor);
+            ctrlPoint->setRect(-4, -4, 8, 8);
+            // control point's move event help us to remove polygon
+            ctrlPoint->installSceneEventFilter(this);
+            //
+            m_ctrlPoints.append(ctrlPoint);
+        }
     }
-    m_ctrlPoints.clear();
+    else if(m_points.size() < m_ctrlPoints.size()) { // Create
+        for(int i = m_points.size(); i < m_ctrlPoints.size(); ++i) {
+            delete m_ctrlPoints.takeLast();
+        }
+    }
 
-    for(auto &pos : posPath) {
-        auto ctrlPoint = new QGraphicsEllipseItem;
-        ctrlPoint->setParentItem(this);
-        // We need some hover effect
-        ctrlPoint->setAcceptHoverEvents(true);
-        ctrlPoint->setPen(QPen(Qt::gray));
-        ctrlPoint->setBrush(Qt::lightGray);
-        ctrlPoint->setCursor(Qt::DragMoveCursor);
-        ctrlPoint->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-        ctrlPoint->setFlag(QGraphicsItem::ItemIsMovable);
-        ctrlPoint->setCursor(Qt::DragMoveCursor);
-        // TODO: EllipseItem should work with a coordinate in parent coordinate system
-        ctrlPoint->setRect(-4, -4, 8, 8);
-        ctrlPoint->setPos(pos);
-        // install event helper
-        ctrlPoint->installSceneEventFilter(this);
-        m_ctrlPoints.append(ctrlPoint);
+    // Move Control Point to GeoCoordinate's postion
+    for(int i = 0; i < m_points.size(); ++i) {
+        m_ctrlPoints.at(i)->setPos(m_points.at(i));
     }
+    //
     updateEditable();
 }
 
 void MapPolygonItem::updateEditable()
 {
-    auto pen = this->pen();
+    auto pen = m_polygon.pen();
     pen.setWidth(0);
     pen.setColor(m_editable ? Qt::white : Qt::lightGray);
-    setPen(pen);
+    m_polygon.setPen(pen);
 
     for(auto &ctrlPoint : m_ctrlPoints) {
         ctrlPoint->setVisible(m_editable);

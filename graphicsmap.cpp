@@ -13,41 +13,41 @@
 #define TILE_LEN 256  ///< 瓦片长度，标准的都是256 * 256
 #define SCENE_LEN ((1<<ZOOM_BASE) * TILE_LEN)   ///< 存放瓦片的场景大小
 
-MudMap::TileSpec MudMap::TileSpec::rise() const
+GraphicsMap::TileSpec GraphicsMap::TileSpec::rise() const
 {
-    return MudMap::TileSpec({this->zoom-1, this->x/2, this->y/2});
+    return GraphicsMap::TileSpec({this->zoom-1, this->x/2, this->y/2});
 }
 
-bool MudMap::TileSpec::operator <(const MudMap::TileSpec &rhs) const
+bool GraphicsMap::TileSpec::operator <(const GraphicsMap::TileSpec &rhs) const
 {
     qlonglong lhsVal = (qlonglong(this->zoom)<<48) + (qlonglong(this->x)<< 24) + this->y;
     qlonglong rhsVal = (qlonglong(rhs.zoom)<<48) + (qlonglong(rhs.x)<< 24) + rhs.y;
     return  lhsVal < rhsVal;
 }
 
-bool MudMap::TileSpec::operator==(const MudMap::TileSpec &rhs) const
+bool GraphicsMap::TileSpec::operator==(const GraphicsMap::TileSpec &rhs) const
 {
     return (this->zoom == rhs.zoom) && (this->x == rhs.x) && (this->y == rhs.y);
 }
 
-MudMap::MudMap(QGraphicsScene *scene) : QGraphicsView(scene),
+GraphicsMap::GraphicsMap(QGraphicsScene *scene) : QGraphicsView(scene),
     m_isloading(false),
     m_hasPendingLoad(false),
     m_zoom(1)
 {
-    qRegisterMetaType<MudMap::TileSpec>("MudMap::TileSpec");
+    qRegisterMetaType<GraphicsMap::TileSpec>("GraphicsMap::TileSpec");
     //
-    m_mapThread = new MudMapThread;
-    connect(this, &MudMap::tileRequested, m_mapThread, &MudMapThread::requestTile, Qt::QueuedConnection);
-    connect(m_mapThread, &MudMapThread::tileToAdd, this, [&](QGraphicsItem* item){
+    m_mapThread = new GraphicsMapThread;
+    connect(this, &GraphicsMap::tileRequested, m_mapThread, &GraphicsMapThread::requestTile, Qt::QueuedConnection);
+    connect(m_mapThread, &GraphicsMapThread::tileToAdd, this, [&](QGraphicsItem* item){
         this->scene()->addItem(item);
         m_tiles.insert(item);
     }, Qt::QueuedConnection);
-    connect(m_mapThread, &MudMapThread::tileToRemove, this, [&](QGraphicsItem* item){
+    connect(m_mapThread, &GraphicsMapThread::tileToRemove, this, [&](QGraphicsItem* item){
         this->scene()->removeItem(item);
         m_tiles.remove(item);
     }, Qt::QueuedConnection);
-    connect(m_mapThread, &MudMapThread::requestFinished, this, [&](){
+    connect(m_mapThread, &GraphicsMapThread::requestFinished, this, [&](){
         m_isloading = false;
         if(m_hasPendingLoad) {
             updateTile();
@@ -59,7 +59,7 @@ MudMap::MudMap(QGraphicsScene *scene) : QGraphicsView(scene),
     setZoomLevel(2);
 }
 
-MudMap::~MudMap()
+GraphicsMap::~GraphicsMap()
 {
     // 在此处从场景移出瓦片，防止和多线程析构冲突
     for(auto item : m_tiles) {
@@ -68,12 +68,12 @@ MudMap::~MudMap()
     delete m_mapThread;
 }
 
-void MudMap::setTilePath(const QString &path)
+void GraphicsMap::setTilePath(const QString &path)
 {
     m_mapThread->setTilePath(path);
 }
 
-void MudMap::setZoomLevel(const float &zoom)
+void GraphicsMap::setZoomLevel(const float &zoom)
 {
     m_zoom = qBound(0.0f, zoom, 20.0f);
     auto zoomLevelDiff = m_zoom - ZOOM_BASE;
@@ -86,17 +86,17 @@ void MudMap::setZoomLevel(const float &zoom)
         updateTile();
 }
 
-void MudMap::setTileCacheCount(const int &count)
+void GraphicsMap::setTileCacheCount(const int &count)
 {
     m_mapThread->setTileCacheCount(count);
 }
 
-void MudMap::setYInverted(const bool &isInverted)
+void GraphicsMap::setYInverted(const bool &isInverted)
 {
     m_mapThread->setYInverted(isInverted);
 }
 
-void MudMap::centerOn(const QGeoCoordinate &coord)
+void GraphicsMap::centerOn(const QGeoCoordinate &coord)
 {
     auto pos = fromCoordinate(coord);
     QGraphicsView::centerOn(pos);
@@ -104,14 +104,14 @@ void MudMap::centerOn(const QGeoCoordinate &coord)
 
 /// \see https://blog.csdn.net/iispring/article/details/8565177
 /// R = SCENE_LEN / 2PI
-QGeoCoordinate MudMap::toCoordinate(const QPoint &point) const
+QGeoCoordinate GraphicsMap::toCoordinate(const QPoint &point) const
 {
     /// NOTE: R = SCENE_LEN / 2PI
     auto scenePos = this->mapToScene(point);
     return toCoordinate(scenePos);
 }
 
-QGeoCoordinate MudMap::toCoordinate(const QPointF &point)
+QGeoCoordinate GraphicsMap::toCoordinate(const QPointF &point)
 {
     auto radLon = point.x() * 2 * M_PI/ SCENE_LEN;
     auto radLat = 2 * qAtan(qPow(M_E, 2*M_PI*point.y()/SCENE_LEN)) - M_PI_2;
@@ -120,7 +120,7 @@ QGeoCoordinate MudMap::toCoordinate(const QPointF &point)
 
 /// \see https://blog.csdn.net/iispring/article/details/8565177
 /// R = SCENE_LEN / 2PI
-QPointF MudMap::fromCoordinate(const QGeoCoordinate &coord)
+QPointF GraphicsMap::fromCoordinate(const QGeoCoordinate &coord)
 {
     /// NOTE: R = SCENE_LEN / 2PI
     auto radLon = qDegreesToRadians(coord.longitude());
@@ -130,7 +130,7 @@ QPointF MudMap::fromCoordinate(const QGeoCoordinate &coord)
     return {x, -y}; // NOTO: as for Qt, it's y asscending from up to bottom
 }
 
-void MudMap::wheelEvent(QWheelEvent *e)
+void GraphicsMap::wheelEvent(QWheelEvent *e)
 {
     bool increase = e->angleDelta().y() > 0;
     if(increase)
@@ -140,7 +140,7 @@ void MudMap::wheelEvent(QWheelEvent *e)
     e->accept();
 }
 
-void MudMap::mouseMoveEvent(QMouseEvent *event)
+void GraphicsMap::mouseMoveEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseMoveEvent(event);
     // as for QGrahpicsView, the move event will be generated whether press event happens when "setTransformationAnchor(QGraphicsView::AnchorUnderMouse)"
@@ -153,7 +153,7 @@ void MudMap::mouseMoveEvent(QMouseEvent *event)
         updateTile();
 }
 
-void MudMap::updateTile()
+void GraphicsMap::updateTile()
 {
     int intZoom = qFloor(m_zoom+0.5);
     //
@@ -173,12 +173,12 @@ void MudMap::updateTile()
 
 }
 
-MudMapThread::TileCacheNode::~TileCacheNode()
+GraphicsMapThread::TileCacheNode::~TileCacheNode()
 {
     delete value;
 }
 
-MudMapThread::MudMapThread() :
+GraphicsMapThread::GraphicsMapThread() :
     m_preTopLeft({0, 0, 0}),
     m_preBottomRight({0, 0, 0}),
     m_yInverted(false)
@@ -191,7 +191,7 @@ MudMapThread::MudMapThread() :
     thread->start();
 }
 
-MudMapThread::~MudMapThread()
+GraphicsMapThread::~GraphicsMapThread()
 {
     this->thread()->quit();
     this->thread()->wait();
@@ -199,7 +199,7 @@ MudMapThread::~MudMapThread()
 }
 
 
-void MudMapThread::requestTile(const MudMap::TileSpec &topLeft, const MudMap::TileSpec &bottomRight)
+void GraphicsMapThread::requestTile(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight)
 {
     if(m_preTopLeft == topLeft && m_preBottomRight == bottomRight) {
         emit requestFinished();
@@ -207,8 +207,8 @@ void MudMapThread::requestTile(const MudMap::TileSpec &topLeft, const MudMap::Ti
     }
 
     // y向下递增
-    QSet<MudMap::TileSpec> curViewSet;
-    QSet<MudMap::TileSpec> preViewSet;
+    QSet<GraphicsMap::TileSpec> curViewSet;
+    QSet<GraphicsMap::TileSpec> preViewSet;
     {
         const int &zoom = topLeft.zoom;
         const int xBegin = topLeft.x;
@@ -238,34 +238,34 @@ void MudMapThread::requestTile(const MudMap::TileSpec &topLeft, const MudMap::Ti
     m_preBottomRight = bottomRight;
 
     // compute which to load and which to unload
-    QSet<MudMap::TileSpec> needToShowTileSet;
-    QSet<MudMap::TileSpec> needToHideTileSet;
+    QSet<GraphicsMap::TileSpec> needToShowTileSet;
+    QSet<GraphicsMap::TileSpec> needToHideTileSet;
     {
-        QSetIterator<MudMap::TileSpec> iter(curViewSet);
+        QSetIterator<GraphicsMap::TileSpec> iter(curViewSet);
         while (iter.hasNext()) {
             auto tileSpec = iter.next();
             createAscendingTileCache(tileSpec, needToShowTileSet);
         }
     }
     {
-        QSetIterator<MudMap::TileSpec> iter(preViewSet);
+        QSetIterator<GraphicsMap::TileSpec> iter(preViewSet);
         while (iter.hasNext()) {
             auto tileSpec = iter.next();
             createAscendingTileCache(tileSpec, needToHideTileSet);
         }
     }
-    QSet<MudMap::TileSpec> realToHideTileSet = needToHideTileSet - needToShowTileSet;
+    QSet<GraphicsMap::TileSpec> realToHideTileSet = needToHideTileSet - needToShowTileSet;
 
     // update the scene tiles
     {
-        QSetIterator<MudMap::TileSpec> iter(needToShowTileSet);
+        QSetIterator<GraphicsMap::TileSpec> iter(needToShowTileSet);
         while (iter.hasNext()) {
             auto &tileSpec = iter.next();
             showItem(tileSpec);
         }
     }
     {
-        QSetIterator<MudMap::TileSpec> iter(realToHideTileSet);
+        QSetIterator<GraphicsMap::TileSpec> iter(realToHideTileSet);
         while (iter.hasNext()) {
             auto &tileSpec = iter.next();
             hideItem(tileSpec);
@@ -275,22 +275,22 @@ void MudMapThread::requestTile(const MudMap::TileSpec &topLeft, const MudMap::Ti
     emit requestFinished();
 }
 
-void MudMapThread::setTilePath(const QString &path)
+void GraphicsMapThread::setTilePath(const QString &path)
 {
     m_path = path;
 }
 
-void MudMapThread::setTileCacheCount(const int &count)
+void GraphicsMapThread::setTileCacheCount(const int &count)
 {
     m_tileCache.setMaxCost(count);
 }
 
-void MudMapThread::setYInverted(const bool &isInverted)
+void GraphicsMapThread::setYInverted(const bool &isInverted)
 {
     m_yInverted = isInverted;
 }
 
-void MudMapThread::showItem(const MudMap::TileSpec &tileSpec)
+void GraphicsMapThread::showItem(const GraphicsMap::TileSpec &tileSpec)
 {
     if(m_tileShowedSet.contains(tileSpec))
         return;
@@ -302,7 +302,7 @@ void MudMapThread::showItem(const MudMap::TileSpec &tileSpec)
     }
 }
 
-void MudMapThread::hideItem(const MudMap::TileSpec &tileSpec)
+void GraphicsMapThread::hideItem(const GraphicsMap::TileSpec &tileSpec)
 {
     // 看不见的直接不管
     if(!m_tileShowedSet.contains(tileSpec))
@@ -322,7 +322,7 @@ void MudMapThread::hideItem(const MudMap::TileSpec &tileSpec)
  * 然后这个矩形从右下角整个向左上角缩放达到和sceneRect()正好重合，以实现所有不同zoom的瓦片都重叠在sceneRect()上，也达到了缺省瓦片通过上层瓦片显示的效果。
  * 为了方便经纬度和场景坐标的转换，这里将经纬度（0，0）映射在了场景坐标的（0，0）处，所以注意xOff和yOff是先移动到以（0，0）为原点的位置，再向左上移动半个场景的宽度和高度
  */
-QGraphicsPixmapItem *MudMapThread::loadTileItem(const MudMap::TileSpec &tileSpec)
+QGraphicsPixmapItem *GraphicsMapThread::loadTileItem(const GraphicsMap::TileSpec &tileSpec)
 {
     int tileCount = qPow(2, tileSpec.zoom);
     //
@@ -348,13 +348,13 @@ QGraphicsPixmapItem *MudMapThread::loadTileItem(const MudMap::TileSpec &tileSpec
     return tileItem;
 }
 
-void MudMapThread::createAscendingTileCache(const MudMap::TileSpec &tileSpec, QSet<MudMap::TileSpec> &sets)
+void GraphicsMapThread::createAscendingTileCache(const GraphicsMap::TileSpec &tileSpec, QSet<GraphicsMap::TileSpec> &sets)
 {
     auto tileCacheItem = m_tileCache.object(tileSpec);
 
     //
     if(!tileCacheItem) {
-        tileCacheItem = new MudMapThread::TileCacheNode;
+        tileCacheItem = new GraphicsMapThread::TileCacheNode;
         tileCacheItem->value = loadTileItem(tileSpec);
         tileCacheItem->tileSpec = tileSpec;
         m_tileCache.insert(tileSpec, tileCacheItem);

@@ -2,6 +2,7 @@
 #define MAPPOLYGONITEM_H
 
 #include "GraphicsMapLib_global.h"
+#include <QGraphicsItemGroup>
 #include <QGraphicsPolygonItem>
 #include <QGraphicsEllipseItem>
 #include <QGeoCoordinate>
@@ -9,8 +10,9 @@
 /*!
  * \brief 多边形
  */
-class GRAPHICSMAPLIB_EXPORT MapPolygonItem : public QGraphicsPolygonItem
+class GRAPHICSMAPLIB_EXPORT MapPolygonItem : public QObject, public QGraphicsItemGroup
 {
+    Q_OBJECT
 public:
     MapPolygonItem();
     /// 控制可编辑性
@@ -22,23 +24,30 @@ public:
     /// 删除经纬点
     void removeCoordinate(const int &index);
     /// 设置多边形顶点
-    void setCoordinates(const QList<QGeoCoordinate> &coords);
+    void setCoordinates(const QVector<QGeoCoordinate> &coords);
     /// 获取多边形顶点
-    const QList<QGeoCoordinate> &coordinates() const;
+    const QVector<QGeoCoordinate> &coordinates() const;
+
+signals:
+    void added(int index, const QGeoCoordinate &coord);
+    void removed(int index, const QGeoCoordinate &coord);
+    void updated(const int &index, const QGeoCoordinate &coord);
+    void changed();
 
 protected:
     virtual bool sceneEventFilter(QGraphicsItem *watched, QEvent *event) override;
 
-
 private:
-    void updatePolygon();
+    void updatePolygon();   ///< 通过场景坐标更新图形
     void updateEditable();
 private:
     bool    m_editable;   ///< 鼠标是否可交互编辑
-    QPointF m_center;     ///< 包围框中心
     //
-    QList<QGeoCoordinate>        m_coords;     ///< 经纬点列表
-    QList<QGraphicsEllipseItem*> m_ctrlPoints; ///< 控制点(圆点)
+    QVector<QGeoCoordinate>      m_coords;     ///< 经纬点列表
+    QVector<QPointF>             m_points;     ///< 场景坐标点列表
+    //
+    QGraphicsPolygonItem         m_polygon;    ///< 多边形元素
+    QVector<QGraphicsEllipseItem*> m_ctrlPoints; ///< 控制点(圆点)
 };
 
 #endif // MAPPOLYGONITEM_H

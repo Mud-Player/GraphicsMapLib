@@ -7,6 +7,7 @@
 
 /*!
  * \brief 椭圆形/正圆
+ * \note 拖动控制点时，按住Shift固定中心进行缩放，否则以对角包围矩形任意大小缩放
  */
 class GRAPHICSMAPLIB_EXPORT MapEllipseItem : public QGraphicsEllipseItem
 {
@@ -35,7 +36,6 @@ private:
     //
     QGraphicsEllipseItem m_topLeftCtrl;
     QGraphicsEllipseItem m_bottomRightCtrl;
-    QGraphicsEllipseItem m_rightCtrl;
 };
 
 #endif // MAPELLIPSEITEM_H
