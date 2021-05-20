@@ -5,16 +5,13 @@
 #include <QGraphicsSceneHoverEvent>
 #include <QDebug>
 
-/*!
- * \details 只要顶点有修改，就会重新构建多边形与控制点，是否有好的优化方案?
- * 以后实际使用过程中，看一下对性能影响大不大
- */
 MapPolygonItem::MapPolygonItem() :
     m_editable(true)
 {
     // keep the outline width of 1-pixel when item scales
     auto pen = this->pen();
-    pen.setWidth(0);
+    pen.setWidth(1);
+    pen.setCosmetic(true);
     this->setPen(pen);
 }
 

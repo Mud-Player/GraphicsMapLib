@@ -10,7 +10,8 @@ MapEllipseItem::MapEllipseItem():
 {
     // keep the outline width of 1-pixel when item scales
     auto pen = this->pen();
-    pen.setWidth(0);
+    pen.setWidth(1);
+    pen.setCosmetic(true);
     this->setPen(pen);
     //
     m_firstCtrl.setRect(-4, -4, 8, 8);
@@ -225,6 +226,7 @@ void MapEllipseItem::updateEditable()
     pen.setColor(m_editable ? Qt::white : Qt::lightGray);
     setPen(pen);
 
+    m_rectCtrl.setVisible(m_editable);
     m_firstCtrl.setVisible(m_editable);
     m_secondCtrl.setVisible(m_editable);
 }
