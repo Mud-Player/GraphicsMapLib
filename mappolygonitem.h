@@ -9,6 +9,7 @@
 
 /*!
  * \brief 多边形
+ * \note 暂缺少图形拖动的实现
  */
 class GRAPHICSMAPLIB_EXPORT MapPolygonItem : public QObject, public QGraphicsPolygonItem
 {
@@ -40,6 +41,7 @@ protected:
 private:
     void updatePolygon();   ///< 通过场景坐标更新图形
     void updateEditable();
+
 private:
     bool    m_editable;   ///< 鼠标是否可交互编辑
     //

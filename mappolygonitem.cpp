@@ -12,6 +12,10 @@
 MapPolygonItem::MapPolygonItem() :
     m_editable(true)
 {
+    // keep the outline width of 1-pixel when item scales
+    auto pen = this->pen();
+    pen.setWidth(0);
+    this->setPen(pen);
 }
 
 void MapPolygonItem::setEditable(const bool &editable)
@@ -99,7 +103,10 @@ bool MapPolygonItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
         this->setPolygon(m_points);
         // it's required to updadte the scene transform result
         auto scenePos = watched->pos();
-        m_coords.replace(index, GraphicsMap::toCoordinate(scenePos));
+        auto coord = GraphicsMap::toCoordinate(scenePos);
+        m_coords.replace(index, coord);
+        //
+        emit updated(index, coord);
         break;
     }
     case QEvent::GraphicsSceneHoverEnter:
@@ -163,7 +170,6 @@ void MapPolygonItem::updatePolygon()
 void MapPolygonItem::updateEditable()
 {
     auto pen = this->pen();
-    pen.setWidth(0);
     pen.setColor(m_editable ? Qt::white : Qt::lightGray);
     this->setPen(pen);
 

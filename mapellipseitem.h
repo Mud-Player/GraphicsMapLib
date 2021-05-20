@@ -7,10 +7,11 @@
 
 /*!
  * \brief 椭圆形/正圆
- * \note 拖动控制点时，按住Shift固定中心进行缩放，否则以对角包围矩形任意大小缩放
+ * \note 暂缺少图形拖动的实现
  */
-class GRAPHICSMAPLIB_EXPORT MapEllipseItem : public QGraphicsEllipseItem
+class GRAPHICSMAPLIB_EXPORT MapEllipseItem : public QObject, public QGraphicsEllipseItem
 {
+    Q_OBJECT
 public:
     MapEllipseItem();
     /// 控制可编辑性
@@ -26,16 +27,31 @@ public:
     /// 获取尺寸
     const QSizeF &size() const;
 
+signals:
+    void centerChanged(const QGeoCoordinate &center);
+    void sizeChanged(const QSizeF &center);
+
+protected:
+    virtual bool sceneEventFilter(QGraphicsItem *watched, QEvent *event) override;
+    /// 被添加到场景后，为控制点添加事件过滤器
+    virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
+
 private:
     void updateEllipse();
     void updateEditable();
+
 private:
     bool           m_editable;   ///< 鼠标是否可交互编辑
+    //
     QGeoCoordinate m_center;     ///< 中心
     QSizeF         m_size;       ///< 宽高
     //
-    QGraphicsEllipseItem m_topLeftCtrl;
-    QGraphicsEllipseItem m_bottomRightCtrl;
+    QGeoCoordinate m_topLeftCoord;        ///< 左上经纬度
+    QGeoCoordinate m_bottomRightCoord;    ///< 右下经纬度
+    //
+    QGraphicsRectItem    m_rectCtrl;       ///< 包围矩形（辅助示意)
+    QGraphicsEllipseItem m_firstCtrl;      ///< 对角控制点1
+    QGraphicsEllipseItem m_secondCtrl;     ///< 对角控制点2
 };
 
 #endif // MAPELLIPSEITEM_H
