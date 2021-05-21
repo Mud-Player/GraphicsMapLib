@@ -17,10 +17,12 @@ add_library(${PROJECT_NAME} SHARED
   mapellipseitem.h
   mappolygonitem.h
   maptrailitem.h
+  mapobjectitem.h
   graphicsmap.cpp
   mapellipseitem.cpp
   mappolygonitem.cpp
   maptrailitem.cpp
+  mapobjectitem.cpp
 )
 add_library(Lib::GraphicsMap ALIAS ${PROJECT_NAME})
 
