@@ -49,7 +49,7 @@ public:
     /// 获取场景坐标对应的经纬度
     static QGeoCoordinate toCoordinate(const QPointF &point);
     /// 获取经纬度对应的场景坐标
-    static QPointF fromCoordinate(const QGeoCoordinate &coord);
+    static QPointF toScene(const QGeoCoordinate &coord);
 
 
 signals:

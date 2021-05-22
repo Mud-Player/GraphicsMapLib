@@ -16,7 +16,7 @@ void MapTrailItem::addCoordinate(const QGeoCoordinate &coord)
 {
     auto path = this->path();
     if(!m_coord.isValid()) {
-        auto point = GraphicsMap::fromCoordinate(coord);
+        auto point = GraphicsMap::toScene(coord);
         path.moveTo(point);
         m_coord = coord;
         setPath(path);
@@ -27,7 +27,7 @@ void MapTrailItem::addCoordinate(const QGeoCoordinate &coord)
         return;
     //
     m_coord = coord;
-    auto point = GraphicsMap::fromCoordinate(coord);
+    auto point = GraphicsMap::toScene(coord);
     path.lineTo(point);
     setPath(path);
 }

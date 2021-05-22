@@ -61,7 +61,7 @@ void MapObjectItem::setCoordinate(const QGeoCoordinate &coord)
     if(m_coord == coord)
         return;
 
-    this->setPos(GraphicsMap::fromCoordinate(coord));
+    this->setPos(GraphicsMap::toScene(coord));
     emit coordinateChanged(coord);
 }
 

@@ -98,7 +98,7 @@ void MapEllipseItem::setRect(const QGeoCoordinate &first, const QGeoCoordinate &
         top = second.latitude();
     } else {
         bottom = second.latitude();
-        top = first.longitude();
+        top = first.latitude();
     }
     // ignore setter requeset if shape and position has no differece
     const QGeoCoordinate tlCoord(top, left);
@@ -209,8 +209,8 @@ QVariant MapEllipseItem::itemChange(QGraphicsItem::GraphicsItemChange change, co
 void MapEllipseItem::updateEllipse()
 {
     // compute topleft point and bottomright point in scene
-    auto topLeftPoint = GraphicsMap::fromCoordinate(m_topLeftCoord);
-    auto bottomRightPoint = GraphicsMap::fromCoordinate(m_bottomRightCoord);
+    auto topLeftPoint = GraphicsMap::toScene(m_topLeftCoord);
+    auto bottomRightPoint = GraphicsMap::toScene(m_bottomRightCoord);
     // update ellipse outlook
     QGraphicsEllipseItem::setRect({topLeftPoint, bottomRightPoint});
     // update ellipse's contorl points

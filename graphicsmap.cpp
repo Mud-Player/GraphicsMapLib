@@ -112,36 +112,37 @@ void GraphicsMap::setYInverted(const bool &isInverted)
 
 void GraphicsMap::centerOn(const QGeoCoordinate &coord)
 {
-    auto pos = fromCoordinate(coord);
+    auto pos = toScene(coord);
     QGraphicsView::centerOn(pos);
 }
 
-/// \see https://blog.csdn.net/iispring/article/details/8565177
-/// R = SCENE_LEN / 2PI
 QGeoCoordinate GraphicsMap::toCoordinate(const QPoint &point) const
 {
-    /// NOTE: R = SCENE_LEN / 2PI
     auto scenePos = this->mapToScene(point);
     return toCoordinate(scenePos);
 }
 
+/// \see https://blog.csdn.net/iispring/article/details/8565177
+/// R = SCENE_LEN / 2PI
 QGeoCoordinate GraphicsMap::toCoordinate(const QPointF &point)
 {
     auto radLon = point.x() * 2 * M_PI/ SCENE_LEN;
     auto radLat = 2 * qAtan(qPow(M_E, 2*M_PI*point.y()/SCENE_LEN)) - M_PI_2;
-    return  {qRadiansToDegrees(radLon), qRadiansToDegrees(radLat)};
+    // NOTO: as for Qt, it's y asscending from up to bottom
+    return  {qRadiansToDegrees(-radLat), qRadiansToDegrees(radLon)};
 }
 
 /// \see https://blog.csdn.net/iispring/article/details/8565177
 /// R = SCENE_LEN / 2PI
-QPointF GraphicsMap::fromCoordinate(const QGeoCoordinate &coord)
+QPointF GraphicsMap::toScene(const QGeoCoordinate &coord)
 {
     /// NOTE: R = SCENE_LEN / 2PI
     auto radLon = qDegreesToRadians(coord.longitude());
     auto radLat = qDegreesToRadians(coord.latitude());
     auto x = SCENE_LEN * radLon / 2.0 / M_PI;
     auto y = SCENE_LEN / 2.0 / M_PI * qLn( qTan(M_PI_4+radLat/2.0) );
-    return {x, -y}; // NOTO: as for Qt, it's y asscending from up to bottom
+    // NOTO: as for Qt, it's y asscending from up to bottom
+    return {x, -y};
 }
 
 void GraphicsMap::updateTile()

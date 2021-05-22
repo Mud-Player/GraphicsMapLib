@@ -28,7 +28,7 @@ void MapPolygonItem::addCoordinate(const QGeoCoordinate &coord)
 {
     m_coords.append(coord);
     // Adding scene point
-    auto point = GraphicsMap::fromCoordinate(coord);
+    auto point = GraphicsMap::toScene(coord);
     m_points.append(point);
     updatePolygon();
     //
@@ -41,7 +41,7 @@ void MapPolygonItem::replaceCoordinate(const int &index, const QGeoCoordinate &c
         return;
     m_coords.replace(index, coord);
     // Modify scene point
-    auto point = GraphicsMap::fromCoordinate(coord);
+    auto point = GraphicsMap::toScene(coord);
     m_points.replace(index, point);
     updatePolygon();
     //
@@ -68,7 +68,7 @@ void MapPolygonItem::setCoordinates(const QVector<QGeoCoordinate> &coords)
     m_coords = coords;
     m_points.clear();
     for(auto &coord : coords) {
-        auto point = GraphicsMap::fromCoordinate(coord);
+        auto point = GraphicsMap::toScene(coord);
         m_points.append(point);
     }
     updatePolygon();

@@ -16,12 +16,14 @@ add_library(${PROJECT_NAME} SHARED
   graphicsmap.h
   interactivemap.h
   mapellipseitem.h
+  mapellipseoperator.h
   mappolygonitem.h
   maptrailitem.h
   mapobjectitem.h
   graphicsmap.cpp
   interactivemap.cpp
   mapellipseitem.cpp
+  mapellipseoperator.cpp
   mappolygonitem.cpp
   maptrailitem.cpp
   mapobjectitem.cpp
