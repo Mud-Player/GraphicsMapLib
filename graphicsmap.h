@@ -12,6 +12,7 @@ class GraphicsMapThread;
 /*!
  * \brief 基于Graphics View的地图
  * \details 其仅用于显示瓦片地图，要实现地图以外的功能可以继承该类
+ * \note 鼠标拖拽地图可通过setDragMode(QGraphicsView::ScrollHandDrag)实现
  */
 class GRAPHICSMAPLIB_EXPORT GraphicsMap : public QGraphicsView
 {
@@ -34,6 +35,7 @@ public:
     void setTilePath(const QString &path);
     /// 设置缩放等级
     void setZoomLevel(const float &zoom);
+    const float &zoomLevel() const;
     /// 设置瓦片缓存数量
     void setTileCacheCount(const int &count);
     /// 设置是否反转Y轴瓦片编号(标准下载的瓦片Y轴编号都是自上而下增加，不过某些情况可能是反的)
@@ -52,10 +54,6 @@ public:
 
 signals:
     void tileRequested(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight);
-
-protected:
-    virtual void wheelEvent(QWheelEvent *e) override;
-    virtual void mouseMoveEvent(QMouseEvent *event) override;
 
 private:
     void updateTile();

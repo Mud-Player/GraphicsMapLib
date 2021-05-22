@@ -1,4 +1,5 @@
 ﻿#include "graphicsmap.h"
+#include <QScrollBar>
 #include <QOpenGLWidget>
 #include <QHBoxLayout>
 #include <QResizeEvent>
@@ -36,7 +37,8 @@ GraphicsMap::GraphicsMap(QGraphicsScene *scene) : QGraphicsView(scene),
     m_zoom(1)
 {
     qRegisterMetaType<GraphicsMap::TileSpec>("GraphicsMap::TileSpec");
-    //
+
+    // connect those necessary slot for map tile loading
     m_mapThread = new GraphicsMapThread;
     connect(this, &GraphicsMap::tileRequested, m_mapThread, &GraphicsMapThread::requestTile, Qt::QueuedConnection);
     connect(m_mapThread, &GraphicsMapThread::tileToAdd, this, [&](QGraphicsItem* item){
@@ -53,6 +55,13 @@ GraphicsMap::GraphicsMap(QGraphicsScene *scene) : QGraphicsView(scene),
             updateTile();
             m_hasPendingLoad = false;
         }
+    }, Qt::QueuedConnection);
+    // TODO: We have to use Qt::QueuedConnection, if not, we will see the map twinkle when scale
+    connect(this->horizontalScrollBar(), &QScrollBar::valueChanged, this, [&](){
+    if(m_isloading)
+        m_hasPendingLoad = true;
+    else
+        updateTile();
     }, Qt::QueuedConnection);
     //
     this->scene()->setSceneRect(-SCENE_LEN/2, -SCENE_LEN/2, SCENE_LEN, SCENE_LEN);
@@ -84,6 +93,11 @@ void GraphicsMap::setZoomLevel(const float &zoom)
         m_hasPendingLoad = true;
     else
         updateTile();
+}
+
+const float &GraphicsMap::zoomLevel() const
+{
+    return m_zoom;
 }
 
 void GraphicsMap::setTileCacheCount(const int &count)
@@ -128,29 +142,6 @@ QPointF GraphicsMap::fromCoordinate(const QGeoCoordinate &coord)
     auto x = SCENE_LEN * radLon / 2.0 / M_PI;
     auto y = SCENE_LEN / 2.0 / M_PI * qLn( qTan(M_PI_4+radLat/2.0) );
     return {x, -y}; // NOTO: as for Qt, it's y asscending from up to bottom
-}
-
-void GraphicsMap::wheelEvent(QWheelEvent *e)
-{
-    bool increase = e->angleDelta().y() > 0;
-    if(increase)
-        this->setZoomLevel(m_zoom + 0.2);
-    else
-        this->setZoomLevel(m_zoom - 0.2);
-    e->accept();
-}
-
-void GraphicsMap::mouseMoveEvent(QMouseEvent *event)
-{
-    QGraphicsView::mouseMoveEvent(event);
-    // as for QGrahpicsView, the move event will be generated whether press event happens when "setTransformationAnchor(QGraphicsView::AnchorUnderMouse)"
-    if(!event->buttons())
-        return;
-
-    if(m_isloading)
-        m_hasPendingLoad = true;
-    else
-        updateTile();
 }
 
 void GraphicsMap::updateTile()

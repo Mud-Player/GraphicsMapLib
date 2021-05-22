@@ -19,14 +19,13 @@ public:
     void setCoordinate(const QGeoCoordinate &coord);
     /// 获取当前经纬度位置
     const QGeoCoordinate &coordinate() const;
-    /// 设置图标
+    /// 设置图标，无效资源将使用默认图标
     void setIcon(const QString &url);
     /// 设置图标为纯色，传QColor()可以取消纯色
     void setColor(const QColor &color, qreal strength = 1.0);
 
 signals:
     void coordinateChanged(const QGeoCoordinate &coord);
-
 
 private:
     QGeoCoordinate m_coord;

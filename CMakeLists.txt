@@ -14,11 +14,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(${PROJECT_NAME} SHARED
   GraphicsMapLib_global.h
   graphicsmap.h
+  interactivemap.h
   mapellipseitem.h
   mappolygonitem.h
   maptrailitem.h
   mapobjectitem.h
   graphicsmap.cpp
+  interactivemap.cpp
   mapellipseitem.cpp
   mappolygonitem.cpp
   maptrailitem.cpp
