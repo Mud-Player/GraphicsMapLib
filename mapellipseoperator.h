@@ -11,6 +11,7 @@ public:
 protected:
     virtual bool mousePressEvent(QMouseEvent *event) override;
     virtual bool mouseReleaseEvent(QMouseEvent *event) override;
+    virtual bool mouseMoveEvent(QMouseEvent *event) override;
 
 private:
     MapEllipseItem *m_ellipse;

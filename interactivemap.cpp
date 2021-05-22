@@ -44,7 +44,8 @@ void InteractiveMap::mouseDoubleClickEvent(QMouseEvent *event)
 
 void InteractiveMap::mouseMoveEvent(QMouseEvent *event)
 {
-    if(!m_operator || !m_operator->mouseMoveEvent(event))
+    // TODO: move event will be generated whether press event is triggerd or not
+    if(!event->buttons() || !m_operator || !m_operator->mouseMoveEvent(event))
         GraphicsMap::mouseMoveEvent(event);
 }
 

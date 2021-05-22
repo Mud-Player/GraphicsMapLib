@@ -23,3 +23,10 @@ bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
     return true;
 }
 
+bool MapEllipseOperator::mouseMoveEvent(QMouseEvent *event)
+{
+    auto second =  m_map->toCoordinate(event->pos());
+    m_ellipse->setRect(m_first, second);
+    return true;
+}
+
