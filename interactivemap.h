@@ -83,6 +83,7 @@ private:
 
 /*!
  * \brief 多边形创建操作器
+ * \details 双击和右键可以结束编辑
  */
 class GRAPHICSMAPLIB_EXPORT MapPolygonOperator : public InteractiveMapOperator
 {

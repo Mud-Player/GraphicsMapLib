@@ -162,6 +162,11 @@ bool MapPolygonOperator::mouseDoubleClickEvent(QMouseEvent *event)
 
 bool MapPolygonOperator::mousePressEvent(QMouseEvent *event)
 {
+    if(event->buttons() & Qt::RightButton) {
+        m_polygon->setEditable(false);
+        m_finishRequested = true;
+        return false;
+    }
     m_pressPos = event->pos();
     return false;
 }
