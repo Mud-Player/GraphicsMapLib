@@ -51,6 +51,8 @@ void MapPolygonItem::replaceCoordinate(const int &index, const QGeoCoordinate &c
 
 void MapPolygonItem::removeCoordinate(const int &index)
 {
+    if(index >= m_coords.size())
+        return;
     auto coord = m_coords.at(index);
     m_coords.removeAt(index);
     m_points.removeAt(index);

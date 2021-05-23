@@ -139,7 +139,6 @@ bool MapEllipseOperator::mouseMoveEvent(QMouseEvent *event)
 void MapPolygonOperator::ready()
 {
     m_polygon = nullptr;
-    m_ignoreEvent = false;
     m_finishRequested = false;
 }
 
@@ -147,6 +146,16 @@ void MapPolygonOperator::end()
 {
     if(m_polygon)
         m_polygon->setEditable(false);
+}
+
+bool MapPolygonOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_polygon)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        m_polygon->removeCoordinate(m_polygon->coordinates().size()-1);
+    }
+    return false;
 }
 
 bool MapPolygonOperator::mouseDoubleClickEvent(QMouseEvent *event)

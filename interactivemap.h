@@ -90,12 +90,12 @@ class GRAPHICSMAPLIB_EXPORT MapPolygonOperator : public InteractiveMapOperator
 protected:
     virtual void ready() override;
     virtual void end() override;
+    virtual bool keyPressEvent(QKeyEvent *event) override;
     virtual bool mouseDoubleClickEvent(QMouseEvent *event) override;
     virtual bool mousePressEvent(QMouseEvent *event) override;
     virtual bool mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-    bool            m_ignoreEvent;
     bool            m_finishRequested;
     QPoint          m_pressPos;
     MapPolygonItem *m_polygon;
