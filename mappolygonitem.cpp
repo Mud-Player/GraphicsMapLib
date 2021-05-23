@@ -6,7 +6,8 @@
 #include <QDebug>
 
 MapPolygonItem::MapPolygonItem() :
-    m_editable(true)
+    m_editable(true),
+    m_sceneAdded(false)
 {
     // keep the outline width of 1-pixel when item scales
     auto pen = this->pen();
@@ -125,6 +126,19 @@ bool MapPolygonItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
     return false;
 }
 
+QVariant MapPolygonItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+   if(change != ItemSceneHasChanged)
+       return QGraphicsPolygonItem::itemChange(change, value);
+
+   m_sceneAdded = true;
+   for(auto ctrlPoint : m_ctrlPoints) {
+       // control point's move event help us to move polygon point
+       ctrlPoint->installSceneEventFilter(this);
+   }
+   return QGraphicsPolygonItem::itemChange(change, value);
+}
+
 void MapPolygonItem::updatePolygon()
 {
     // Reset polygon data to QGraphicsPolygonItem
@@ -144,8 +158,11 @@ void MapPolygonItem::updatePolygon()
             ctrlPoint->setFlag(QGraphicsItem::ItemIsMovable);
             ctrlPoint->setCursor(Qt::DragMoveCursor);
             ctrlPoint->setRect(-4, -4, 8, 8);
-            // control point's move event help us to remove polygon
-            ctrlPoint->installSceneEventFilter(this);
+
+            // control point's move event help us to move polygon point
+            if(m_sceneAdded)
+                ctrlPoint->installSceneEventFilter(this);
+
             //
             m_ctrlPoints.append(ctrlPoint);
         }

@@ -5,6 +5,7 @@
 
 class InteractiveMapOperator;
 class MapEllipseItem;
+class MapPolygonItem;
 
 /*!
  * \brief 可交互地图
@@ -67,8 +68,6 @@ protected:
  */
 class GRAPHICSMAPLIB_EXPORT MapEllipseOperator : public InteractiveMapOperator
 {
-public:
-    MapEllipseOperator();
 protected:
     virtual void ready() override;
     virtual void end() override;
@@ -78,8 +77,27 @@ protected:
 
 private:
     bool            m_ignoreEvent;
+    QGeoCoordinate  m_first;
     MapEllipseItem *m_ellipse;
-    QGeoCoordinate m_first;
+};
+
+/*!
+ * \brief 多边形创建操作器
+ */
+class GRAPHICSMAPLIB_EXPORT MapPolygonOperator : public InteractiveMapOperator
+{
+protected:
+    virtual void ready() override;
+    virtual void end() override;
+    virtual bool mouseDoubleClickEvent(QMouseEvent *event) override;
+    virtual bool mousePressEvent(QMouseEvent *event) override;
+    virtual bool mouseReleaseEvent(QMouseEvent *event) override;
+
+private:
+    bool            m_ignoreEvent;
+    bool            m_finishRequested;
+    QPoint          m_pressPos;
+    MapPolygonItem *m_polygon;
 };
 
 #endif // INTERACTIVEMAP_H

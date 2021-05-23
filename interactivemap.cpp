@@ -1,5 +1,6 @@
 ﻿#include "interactivemap.h"
 #include "mapellipseitem.h"
+#include "mappolygonitem.h"
 #include <QDebug>
 
 InteractiveMap::InteractiveMap(QGraphicsScene *scene) : GraphicsMap(scene),
@@ -10,9 +11,17 @@ InteractiveMap::InteractiveMap(QGraphicsScene *scene) : GraphicsMap(scene),
 
 void InteractiveMap::setOperator(InteractiveMapOperator *op)
 {
+    if(op == m_operator)
+        return;
+    // process end funtion with previos operator
+    if(m_operator)
+        m_operator->end();
+    //
     op->setScene(this->scene());
     op->setMap(this);
     m_operator = op;
+    // process ready funtion with newlly operator
+    op->ready();
 }
 
 void InteractiveMap::wheelEvent(QWheelEvent *e)
@@ -62,11 +71,6 @@ void InteractiveMap::mouseReleaseEvent(QMouseEvent *event)
         GraphicsMap::mouseReleaseEvent(event);
 }
 
-MapEllipseOperator::MapEllipseOperator():
-    m_ellipse(nullptr)
-{
-}
-
 void MapEllipseOperator::ready()
 {
     m_ellipse = nullptr;
@@ -96,10 +100,10 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
     //
     m_ignoreEvent = false;
     m_ellipse = new MapEllipseItem;
-    m_ellipse->setEditable(true);
     m_scene->addItem(m_ellipse);
     m_first  = m_map->toCoordinate(event->pos());
     m_ellipse->setRect(m_first, m_first);
+    m_ellipse->setEditable(true);
     return true;
 }
 
@@ -129,5 +133,52 @@ bool MapEllipseOperator::mouseMoveEvent(QMouseEvent *event)
     // Press Event didn't propagte to QGraphicsView ,
     // so we should to return false that helps up to zooming on cursor,
     // and map will not be moved by cursor move
+    return false;
+}
+
+void MapPolygonOperator::ready()
+{
+    m_polygon = nullptr;
+    m_ignoreEvent = false;
+    m_finishRequested = false;
+}
+
+void MapPolygonOperator::end()
+{
+    if(m_polygon)
+        m_polygon->setEditable(false);
+}
+
+bool MapPolygonOperator::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    Q_UNUSED(event)
+    // the last point have been craeted since previous mouse release event
+    if(m_polygon) {
+        m_polygon->setEditable(false);
+        m_finishRequested = true;
+    }
+    return false;
+}
+
+bool MapPolygonOperator::mousePressEvent(QMouseEvent *event)
+{
+    m_pressPos = event->pos();
+    return false;
+}
+
+bool MapPolygonOperator::mouseReleaseEvent(QMouseEvent *event)
+{
+    if(m_finishRequested) {
+        m_finishRequested = false;
+        m_polygon = nullptr;
+        return false;
+    }
+    if(m_pressPos != event->pos())
+        return false;
+    if(!m_polygon) {
+        m_polygon = new MapPolygonItem;
+        m_scene->addItem(m_polygon);
+    }
+    m_polygon->addCoordinate(m_map->toCoordinate(event->pos()));
     return false;
 }

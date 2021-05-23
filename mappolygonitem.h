@@ -37,6 +37,8 @@ signals:
 
 protected:
     virtual bool sceneEventFilter(QGraphicsItem *watched, QEvent *event) override;
+    /// 被添加到场景后，为控制点添加事件过滤器
+    virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
 
 private:
     void updatePolygon();   ///< 通过场景坐标更新图形
@@ -44,6 +46,7 @@ private:
 
 private:
     bool    m_editable;   ///< 鼠标是否可交互编辑
+    bool    m_sceneAdded; ///< 是否已被添加到场景
     //
     QVector<QGeoCoordinate>      m_coords;     ///< 经纬点列表
     QVector<QPointF>             m_points;     ///< 场景坐标点列表
