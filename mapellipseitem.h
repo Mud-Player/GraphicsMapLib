@@ -14,6 +14,7 @@ class GRAPHICSMAPLIB_EXPORT MapEllipseItem : public QObject, public QGraphicsEll
     Q_OBJECT
 public:
     MapEllipseItem();
+    ~MapEllipseItem();
     /// 控制可编辑性
     void setEditable(const bool &editable);
     /// 设置中心
@@ -27,6 +28,10 @@ public:
     /// 获取尺寸
     const QSizeF &size() const;
 
+public:
+    /// 获取所有的实例
+    static const QSet<MapEllipseItem*> &items();
+
 signals:
     void centerChanged(const QGeoCoordinate &center);
     void sizeChanged(const QSizeF &center);
@@ -39,6 +44,9 @@ protected:
 private:
     void updateEllipse();
     void updateEditable();
+
+private:
+    static QSet<MapEllipseItem*> m_items;         ///< 所有实例
 
 private:
     bool           m_editable;   ///< 鼠标是否可交互编辑

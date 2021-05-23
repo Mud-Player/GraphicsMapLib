@@ -42,6 +42,8 @@ public:
     void setYInverted(const bool &isInverted);
     /// 获取窗口坐标对应的经纬度
     QGeoCoordinate toCoordinate(const QPoint &point) const;
+    /// 获取经纬度对应的窗口坐标
+    QPoint toPoint(const QGeoCoordinate &coord) const;
     /// 居中
     void centerOn(const QGeoCoordinate &coord);
 
@@ -90,6 +92,7 @@ class GraphicsMapThread : public QObject
 public:
     GraphicsMapThread();
     ~GraphicsMapThread();
+
 public slots:
     void requestTile(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight);
     /// 设置瓦片路径
@@ -117,6 +120,7 @@ private:
     //
     GraphicsMap::TileSpec m_preTopLeft;
     GraphicsMap::TileSpec m_preBottomRight;
+    //
     QString          m_path;
     bool             m_yInverted;
 };

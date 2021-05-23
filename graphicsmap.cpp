@@ -122,6 +122,12 @@ QGeoCoordinate GraphicsMap::toCoordinate(const QPoint &point) const
     return toCoordinate(scenePos);
 }
 
+QPoint GraphicsMap::toPoint(const QGeoCoordinate &coord) const
+{
+    auto scenePos = toScene(coord);
+    return this->mapFromScene(scenePos);
+}
+
 /// \see https://blog.csdn.net/iispring/article/details/8565177
 /// R = SCENE_LEN / 2PI
 QGeoCoordinate GraphicsMap::toCoordinate(const QPointF &point)
