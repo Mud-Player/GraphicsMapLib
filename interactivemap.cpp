@@ -3,7 +3,7 @@
 #include "mappolygonitem.h"
 #include <QDebug>
 
-InteractiveMap::InteractiveMap(QGraphicsScene *scene) : GraphicsMap(scene),
+InteractiveMap::InteractiveMap(QGraphicsScene *scene, QWidget *parent) : GraphicsMap(scene, parent),
     m_operator(nullptr)
 {
 
@@ -63,12 +63,23 @@ void InteractiveMap::mousePressEvent(QMouseEvent *event)
 {
     if(!m_operator || !m_operator->mousePressEvent(event))
         GraphicsMap::mousePressEvent(event);
+    viewport()->setCursor(Qt::ArrowCursor);
 }
 
 void InteractiveMap::mouseReleaseEvent(QMouseEvent *event)
 {
     if(!m_operator || !m_operator->mouseReleaseEvent(event))
         GraphicsMap::mouseReleaseEvent(event);
+    viewport()->setCursor(Qt::ArrowCursor);
+}
+
+InteractiveMapOperator::InteractiveMapOperator(QObject *parent) : QObject(parent)
+{
+
+}
+
+MapEllipseOperator::MapEllipseOperator(QObject *parent) : InteractiveMapOperator(parent)
+{
 }
 
 void MapEllipseOperator::ready()
@@ -134,6 +145,11 @@ bool MapEllipseOperator::mouseMoveEvent(QMouseEvent *event)
     // so we should to return false that helps up to zooming on cursor,
     // and map will not be moved by cursor move
     return false;
+}
+
+MapPolygonOperator::MapPolygonOperator(QObject *parent) : InteractiveMapOperator(parent)
+{
+
 }
 
 void MapPolygonOperator::ready()

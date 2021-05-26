@@ -31,7 +31,7 @@ bool GraphicsMap::TileSpec::operator==(const GraphicsMap::TileSpec &rhs) const
     return (this->zoom == rhs.zoom) && (this->x == rhs.x) && (this->y == rhs.y);
 }
 
-GraphicsMap::GraphicsMap(QGraphicsScene *scene) : QGraphicsView(scene),
+GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView(scene, parent),
     m_isloading(false),
     m_hasPendingLoad(false),
     m_zoom(1)

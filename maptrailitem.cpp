@@ -5,7 +5,7 @@ MapTrailItem::MapTrailItem()
 {
     auto pen = this->pen();
     pen.setWidth(2);
-    pen.setCosmetic(true);  // it will be always 5 pixmap whatever scale transform
+    pen.setCosmetic(true);  // it will be always 2 pixmap whatever scale transform
     pen.setCapStyle(Qt::RoundCap);
     pen.setJoinStyle(Qt::RoundJoin);
     pen.setColor(Qt::yellow);

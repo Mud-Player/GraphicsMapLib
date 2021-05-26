@@ -5,6 +5,8 @@
 #include <QGraphicsSceneHoverEvent>
 #include <QDebug>
 
+QSet<MapPolygonItem*> MapPolygonItem::m_items;
+
 MapPolygonItem::MapPolygonItem() :
     m_editable(true),
     m_sceneAdded(false)
@@ -14,6 +16,13 @@ MapPolygonItem::MapPolygonItem() :
     pen.setWidth(1);
     pen.setCosmetic(true);
     this->setPen(pen);
+    //
+    m_items.insert(this);
+}
+
+MapPolygonItem::~MapPolygonItem()
+{
+    m_items.remove(this);
 }
 
 void MapPolygonItem::setEditable(const bool &editable)
@@ -84,6 +93,10 @@ const QVector<QGeoCoordinate> &MapPolygonItem::coordinates() const
     return m_coords;
 }
 
+const QSet<MapPolygonItem *> &MapPolygonItem::items()
+{
+    return m_items;
+}
 
 /// the function will take advantage of those Ctrl-Points's Position property,
 /// also, the function will determine the outlook of those Ctrl-Points

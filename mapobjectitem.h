@@ -15,20 +15,33 @@ class GRAPHICSMAPLIB_EXPORT MapObjectItem : public QObject, public QGraphicsPixm
     Q_OBJECT
 public:
     MapObjectItem();
+    ~MapObjectItem();
     /// 设置经纬度位置
     void setCoordinate(const QGeoCoordinate &coord);
     /// 获取当前经纬度位置
     const QGeoCoordinate &coordinate() const;
+    /// 设置航向角
+    void setYaw(const float &yaw);
+    /// 获取当前航向角
+    const float &yaw() const;
     /// 设置图标，无效资源将使用默认图标
     void setIcon(const QString &url);
     /// 设置图标为纯色，传QColor()可以取消纯色
     void setColor(const QColor &color, qreal strength = 1.0);
 
+public:
+    /// 获取所有的实例
+    static const QSet<MapObjectItem*> &items();
+
 signals:
     void coordinateChanged(const QGeoCoordinate &coord);
 
 private:
+    static QSet<MapObjectItem*> m_items;         ///< 所有实例
+
+private:
     QGeoCoordinate m_coord;
+    float          m_yaw;
 };
 
 #endif // MAPOBJECTITEM_H

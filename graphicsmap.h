@@ -29,7 +29,7 @@ public:
         bool operator== (const TileSpec &rhs) const;
     };
 
-    GraphicsMap(QGraphicsScene *scene);
+    GraphicsMap(QGraphicsScene *scene, QWidget *parent = nullptr);
     ~GraphicsMap();
     /// 设置瓦片路径
     void setTilePath(const QString &path);

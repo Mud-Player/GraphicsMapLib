@@ -16,6 +16,7 @@ class GRAPHICSMAPLIB_EXPORT MapPolygonItem : public QObject, public QGraphicsPol
     Q_OBJECT
 public:
     MapPolygonItem();
+    ~MapPolygonItem();
     /// 控制可编辑性
     void setEditable(const bool &editable);
     /// 添加经纬点
@@ -29,9 +30,13 @@ public:
     /// 获取多边形顶点
     const QVector<QGeoCoordinate> &coordinates() const;
 
+public:
+    /// 获取所有的实例
+    static const QSet<MapPolygonItem*> &items();
+
 signals:
-    void added(int index, const QGeoCoordinate &coord);
-    void removed(int index, const QGeoCoordinate &coord);
+    void added(const int index, const QGeoCoordinate &coord);
+    void removed(const int index, const QGeoCoordinate &coord);
     void updated(const int &index, const QGeoCoordinate &coord);
     void changed();
 
@@ -43,6 +48,9 @@ protected:
 private:
     void updatePolygon();   ///< 通过场景坐标更新图形
     void updateEditable();
+
+private:
+    static QSet<MapPolygonItem*> m_items;         ///< 所有实例
 
 private:
     bool    m_editable;   ///< 鼠标是否可交互编辑

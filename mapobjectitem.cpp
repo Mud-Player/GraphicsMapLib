@@ -50,10 +50,19 @@ static const char *default_xpm[] = {
 "                                "
 };
 
+QSet<MapObjectItem*> MapObjectItem::m_items;
+
 MapObjectItem::MapObjectItem()
 {
     this->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
     setIcon(QString());
+    //
+    m_items.insert(this);
+}
+
+MapObjectItem::~MapObjectItem()
+{
+    m_items.remove(this);
 }
 
 void MapObjectItem::setCoordinate(const QGeoCoordinate &coord)
@@ -63,6 +72,14 @@ void MapObjectItem::setCoordinate(const QGeoCoordinate &coord)
 
     this->setPos(GraphicsMap::toScene(coord));
     emit coordinateChanged(coord);
+}
+
+void MapObjectItem::setYaw(const float &yaw)
+{
+    if(qFuzzyCompare(yaw, m_yaw))
+        return;
+    m_yaw = yaw;
+    setRotation(m_yaw);
 }
 
 void MapObjectItem::setIcon(const QString &url)
@@ -92,4 +109,9 @@ void MapObjectItem::setColor(const QColor &color, qreal strength)
     }
     effect->setColor(color);
     effect->setStrength(strength);
+}
+
+const QSet<MapObjectItem *> &MapObjectItem::items()
+{
+    return m_items;
 }
