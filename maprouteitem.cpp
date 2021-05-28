@@ -1,11 +1,6 @@
 ﻿#include "maprouteitem.h"
 #include "graphicsmap.h"
 
-bool MapRouteItem::Point::operator==(const MapRouteItem::Point &rhs)
-{
-    return (this->coord == rhs.coord && this->speed == rhs.speed);
-}
-
 MapRouteItem::MapRouteItem()
 {
     qRegisterMetaType<MapRouteItem::Point>("MapRouteItem::Point");
@@ -19,46 +14,111 @@ MapRouteItem::MapRouteItem()
     this->setPen(pen);
 }
 
-void MapRouteItem::append(const MapRouteItem::Point &point)
+MapRoutePoint* MapRouteItem::append(const MapRouteItem::Point &point)
 {
-    m_points.append(point);
+    auto pointItem = createPoint();
+    m_routePoints.append(point);
+    m_ctrlItems.append(pointItem);
     updateRoute();
     //
-    emit added(m_points.size()-1, point);
+    emit added(m_routePoints.size()-1, point);
+    return pointItem;
 }
 
-void MapRouteItem::insert(const int &index, const MapRouteItem::Point &point)
+MapRoutePoint *MapRouteItem::insert(const int &index, const MapRouteItem::Point &point)
 {
-    m_points.insert(index, point);
+    auto pointItem = createPoint();
+    m_routePoints.insert(index, point);
+    m_ctrlItems.insert(index, pointItem);
     updateRoute();
     //
     emit added(index, point);
+    return pointItem;
 }
 
-void MapRouteItem::replace(const int &index, const MapRouteItem::Point &point)
+MapRoutePoint *MapRouteItem::replace(const int &index, const MapRouteItem::Point &point)
 {
-    if(m_points.value(index) == point)
-        return;
-    m_points.replace(index, point);
+    if(m_routePoints.value(index) == point)
+        return m_ctrlItems.value(index);
+
+    delete m_ctrlItems.value(index);
+    //
+    auto pointItem = createPoint();
+    m_routePoints.replace(index, point);
+    m_ctrlItems.replace(index, pointItem);
     updateRoute();
     //
     emit updated(index, point);
+    return pointItem;
 }
 
 void MapRouteItem::remove(const int &index)
 {
-    auto coord = m_points.takeAt(index);
+    if(index >= m_routePoints.size()-1)
+        return;
+
+    auto coord = m_routePoints.takeAt(index);
+    delete m_ctrlItems.takeAt(index);
     updateRoute();
     //
     emit removed(index, coord);
 }
 
-void MapRouteItem::setPoints(const QVector<MapRouteItem::Point> &points)
+const QVector<MapRoutePoint*> &MapRouteItem::setPoints(const QVector<MapRouteItem::Point> &points)
 {
-    if(points == m_points)
-        return;
-    m_points = points;
+    if(points == m_routePoints)
+        return m_ctrlItems;
+
+    // delete previous
+    for(const auto &item : m_ctrlItems) {
+        delete item;
+    }
+    m_ctrlItems.clear();
+
+    // make up the newly
+    m_routePoints = points;
+    for(int i = 0; i < points.size(); ++i) {
+       m_ctrlItems.append(createPoint());
+    }
     updateRoute();
     //
     emit changed();
+    return m_ctrlItems;
+}
+
+const QVector<MapRoutePoint *> &MapRouteItem::points() const
+{
+    return m_ctrlItems;
+}
+
+/// 更新QPainterPath的路径
+/// 更新多个航点的位置与文本
+void MapRouteItem::updateRoute()
+{
+    // update path
+
+
+}
+
+MapRoutePoint *MapRouteItem::createPoint()
+{
+    auto pointItem = new MapRoutePoint;
+    pointItem->setParentItem(this);
+    pointItem->installSceneEventFilter(this);
+    return pointItem;
+}
+
+MapRoutePoint::MapRoutePoint()
+{
+    this->setRect(-5, -5, 10, 10);
+}
+
+void MapRoutePoint::setText(const QString &text)
+{
+    m_text.setText(text);
+}
+
+void MapRoutePoint::setAnimation(bool on)
+{
+
 }
