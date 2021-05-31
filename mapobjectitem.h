@@ -20,14 +20,12 @@ public:
     void setCoordinate(const QGeoCoordinate &coord);
     /// 获取当前经纬度位置
     const QGeoCoordinate &coordinate() const;
-    /// 设置航向角
-    void setYaw(const float &yaw);
-    /// 获取当前航向角
-    const float &yaw() const;
     /// 设置图标，无效资源将使用默认图标
     void setIcon(const QString &url);
     /// 设置图标为纯色，传QColor()可以取消纯色
     void setColor(const QColor &color, qreal strength = 1.0);
+    /// 设置旋转
+    void setRotation(const float &yaw);
 
 public:
     /// 获取所有的实例

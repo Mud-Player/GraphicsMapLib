@@ -34,7 +34,7 @@ void MapPolygonItem::setEditable(const bool &editable)
     updateEditable();
 }
 
-void MapPolygonItem::addCoordinate(const QGeoCoordinate &coord)
+void MapPolygonItem::append(const QGeoCoordinate &coord)
 {
     m_coords.append(coord);
     // Adding scene point
@@ -45,7 +45,7 @@ void MapPolygonItem::addCoordinate(const QGeoCoordinate &coord)
     emit added(m_points.size()-1, coord);
 }
 
-void MapPolygonItem::replaceCoordinate(const int &index, const QGeoCoordinate &coord)
+void MapPolygonItem::replace(const int &index, const QGeoCoordinate &coord)
 {
     if(m_coords.at(index) == coord)
         return;
@@ -58,7 +58,7 @@ void MapPolygonItem::replaceCoordinate(const int &index, const QGeoCoordinate &c
     emit updated(index, coord);
 }
 
-void MapPolygonItem::removeCoordinate(const int &index)
+void MapPolygonItem::remove(const int &index)
 {
     if(index < 0 || index >= m_coords.size())
         return;
@@ -71,7 +71,7 @@ void MapPolygonItem::removeCoordinate(const int &index)
     emit removed(index, coord);
 }
 
-void MapPolygonItem::setCoordinates(const QVector<QGeoCoordinate> &coords)
+void MapPolygonItem::setPoints(const QVector<QGeoCoordinate> &coords)
 {
     if(m_coords == coords)
         return;
@@ -88,7 +88,7 @@ void MapPolygonItem::setCoordinates(const QVector<QGeoCoordinate> &coords)
     emit changed();
 }
 
-const QVector<QGeoCoordinate> &MapPolygonItem::coordinates() const
+const QVector<QGeoCoordinate> &MapPolygonItem::points() const
 {
     return m_coords;
 }

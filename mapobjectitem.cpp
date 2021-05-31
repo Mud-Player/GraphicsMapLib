@@ -70,16 +70,14 @@ void MapObjectItem::setCoordinate(const QGeoCoordinate &coord)
     if(m_coord == coord)
         return;
 
+    m_coord = coord;
     this->setPos(GraphicsMap::toScene(coord));
     emit coordinateChanged(coord);
 }
 
-void MapObjectItem::setYaw(const float &yaw)
+const QGeoCoordinate &MapObjectItem::coordinate() const
 {
-    if(qFuzzyCompare(yaw, m_yaw))
-        return;
-    m_yaw = yaw;
-    setRotation(m_yaw);
+    return m_coord;
 }
 
 void MapObjectItem::setIcon(const QString &url)
@@ -109,6 +107,14 @@ void MapObjectItem::setColor(const QColor &color, qreal strength)
     }
     effect->setColor(color);
     effect->setStrength(strength);
+}
+
+void MapObjectItem::setRotation(const float &yaw)
+{
+    if(qFuzzyCompare(yaw, m_yaw))
+        return;
+    m_yaw = yaw;
+    setRotation(m_yaw);
 }
 
 const QSet<MapObjectItem *> &MapObjectItem::items()

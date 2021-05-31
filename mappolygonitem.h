@@ -20,15 +20,15 @@ public:
     /// 控制可编辑性
     void setEditable(const bool &editable);
     /// 添加经纬点
-    void addCoordinate(const QGeoCoordinate &coord);
+    void append(const QGeoCoordinate &coord);
     /// 修改经纬点
-    void replaceCoordinate(const int &index, const QGeoCoordinate &coord);
+    void replace(const int &index, const QGeoCoordinate &coord);
     /// 删除经纬点
-    void removeCoordinate(const int &index);
+    void remove(const int &index);
     /// 设置多边形顶点
-    void setCoordinates(const QVector<QGeoCoordinate> &coords);
+    void setPoints(const QVector<QGeoCoordinate> &coords);
     /// 获取多边形顶点
-    const QVector<QGeoCoordinate> &coordinates() const;
+    const QVector<QGeoCoordinate> &points() const;
 
 public:
     /// 获取所有的实例

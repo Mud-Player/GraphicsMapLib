@@ -6,6 +6,7 @@
 class InteractiveMapOperator;
 class MapEllipseItem;
 class MapPolygonItem;
+class MapRouteItem;
 class MapObjectItem;
 
 /*!
@@ -71,6 +72,7 @@ protected:
 
 /*!
  * \brief 圆形创建操作器
+ * \details 右键、双击完成创建
  */
 class GRAPHICSMAPLIB_EXPORT MapEllipseOperator : public InteractiveMapOperator
 {
@@ -81,7 +83,6 @@ public:
 
 signals:
     void created(MapEllipseItem *item);
-    void removed(MapEllipseItem *item);
 
 protected:
     virtual void ready() override;
@@ -109,7 +110,6 @@ public:
 
 signals:
     void created(MapPolygonItem *item);
-    void removed(MapPolygonItem *item);
 
 protected:
     virtual void ready() override;
@@ -129,28 +129,30 @@ private:
  * \brief 图标对象创建操作器
  * \details 双击完成单图标对象的创建，多次点击实现图标初始初始位置与移动路线的规划
  */
-//class GRAPHICSMAPLIB_EXPORT MapObjectOperator : public InteractiveMapOperator
-//{
-//    Q_OBJECT
+class GRAPHICSMAPLIB_EXPORT MapObjectOperator : public InteractiveMapOperator
+{
+    Q_OBJECT
 
-//public:
-//    MapObjectOperator(QObject *parent = nullptr);
+public:
+    MapObjectOperator(QObject *parent = nullptr);
 
-//signals:
-//    void created(MapObjectItem *item);
-//    void removed(MapObjectItem *item);
+signals:
+    void created(MapObjectItem *item);
+    void created(MapRouteItem *item);
 
-//protected:
-//    virtual void ready() override;
-//    virtual void end() override;
-//    virtual bool keyPressEvent(QKeyEvent *event) override;
-//    virtual bool mouseDoubleClickEvent(QMouseEvent *event) override;
-//    virtual bool mousePressEvent(QMouseEvent *event) override;
-//    virtual bool mouseReleaseEvent(QMouseEvent *event) override;
+protected:
+    virtual void ready() override;
+    virtual void end() override;
+    virtual bool keyPressEvent(QKeyEvent *event) override;
+    virtual bool mouseDoubleClickEvent(QMouseEvent *event) override;
+    virtual bool mousePressEvent(QMouseEvent *event) override;
+    virtual bool mouseReleaseEvent(QMouseEvent *event) override;
 
-//private:
-//    bool            m_finishRequested;
-//    QPoint          m_pressPos;
-//    MapPolygonItem *m_polygon;
-//};
+private:
+    bool           m_finishRequested;
+    QPoint         m_pressPos;
+    //
+    MapObjectItem *m_object;
+    MapRouteItem  *m_route;
+};
 #endif // INTERACTIVEMAP_H

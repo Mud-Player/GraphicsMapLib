@@ -25,6 +25,7 @@ public:
     };
 public:
     MapRouteItem();
+    ~MapRouteItem();
     /// 控制可编辑性
     void setEditable(const bool &editable);
     /// 是否自动航点编号，默认打开从0编号
@@ -42,6 +43,10 @@ public:
     /// 获取航点列表
     const QVector<MapRoutePoint*> &points() const;
 
+public:
+    /// 获取所有的实例
+    static const QSet<MapRouteItem*> &items();
+
 signals:
     void added(const int &index, const Point &point);
     void removed(const int &index, Point &point);
@@ -52,6 +57,9 @@ protected:
     virtual bool sceneEventFilter(QGraphicsItem *watched, QEvent *event) override;
     /// 被添加到场景后，为控制点添加事件过滤器
     virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
+
+private:
+    static QSet<MapRouteItem*> m_items;         ///< 所有实例
 
 private:
     void updatePolylineAndText(int beginIndex , int endIndex);    ///< 更新航线和航点文字，beginIndex可以用于优化从指定位置开始更新
