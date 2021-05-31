@@ -4,6 +4,7 @@
 #include "GraphicsMapLib_global.h"
 #include <QGraphicsPathItem>
 #include <QGeoCoordinate>
+#include <QTimer>
 
 class MapRoutePoint;
 
@@ -45,11 +46,20 @@ signals:
     void updated(const int &index, const Point &point);
     void changed();
 
+protected:
+    virtual bool sceneEventFilter(QGraphicsItem *watched, QEvent *event) override;
+    /// 被添加到场景后，为控制点添加事件过滤器
+    virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
+
 private:
-    void updateRoute();
+    void updatePolylineAndText(int beginIndex , int endIndex);    ///< 更新航线和航点文字，beginIndex可以用于优化从指定位置开始更新
     MapRoutePoint *createPoint();
 
 private:
+    bool    m_editable;   ///< 鼠标是否可交互编辑
+    bool    m_sceneAdded; ///< 是否已被添加到场景
+    bool    m_autoNumber; ///< 航点自动编号
+    //
     QVector<Point>            m_routePoints;    ///< 航点数据
     QVector<MapRoutePoint*>   m_ctrlItems;      ///< 航点元素
 };
@@ -58,7 +68,7 @@ Q_DECLARE_METATYPE(MapRouteItem::Point)
 /*!
  * \brief 航路点
  */
-class MapRoutePoint : public QGraphicsEllipseItem {
+class GRAPHICSMAPLIB_EXPORT MapRoutePoint : public QGraphicsEllipseItem {
 public:
     MapRoutePoint();
     /// 设置文字

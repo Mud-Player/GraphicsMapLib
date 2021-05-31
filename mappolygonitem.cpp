@@ -171,7 +171,6 @@ void MapPolygonItem::updatePolygon()
             ctrlPoint->setCursor(Qt::DragMoveCursor);
             ctrlPoint->setFlag(QGraphicsItem::ItemIgnoresTransformations);
             ctrlPoint->setFlag(QGraphicsItem::ItemIsMovable);
-            ctrlPoint->setCursor(Qt::DragMoveCursor);
             ctrlPoint->setRect(-4, -4, 8, 8);
 
             // control point's move event help us to move polygon point

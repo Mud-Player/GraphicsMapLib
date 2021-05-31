@@ -1,7 +1,9 @@
 ﻿#include "maprouteitem.h"
 #include "graphicsmap.h"
 
-MapRouteItem::MapRouteItem()
+MapRouteItem::MapRouteItem() :
+    m_sceneAdded(false),
+    m_autoNumber(true)
 {
     qRegisterMetaType<MapRouteItem::Point>("MapRouteItem::Point");
     //
@@ -10,8 +12,13 @@ MapRouteItem::MapRouteItem()
     pen.setCosmetic(true);  // it will be always 2 pixmap whatever scale transform
     pen.setCapStyle(Qt::RoundCap);
     pen.setJoinStyle(Qt::RoundJoin);
-    pen.setColor(Qt::yellow);
+    pen.setColor(Qt::white);
     this->setPen(pen);
+}
+
+void MapRouteItem::setAutoNumber(bool on)
+{
+    m_autoNumber = on;
 }
 
 MapRoutePoint* MapRouteItem::append(const MapRouteItem::Point &point)
@@ -19,7 +26,10 @@ MapRoutePoint* MapRouteItem::append(const MapRouteItem::Point &point)
     auto pointItem = createPoint();
     m_routePoints.append(point);
     m_ctrlItems.append(pointItem);
-    updateRoute();
+    // update point item pos
+    pointItem->setPos(GraphicsMap::toScene(point.coord));
+    //
+    updatePolylineAndText(m_routePoints.size()-1, m_routePoints.size()-1);
     //
     emit added(m_routePoints.size()-1, point);
     return pointItem;
@@ -30,7 +40,10 @@ MapRoutePoint *MapRouteItem::insert(const int &index, const MapRouteItem::Point 
     auto pointItem = createPoint();
     m_routePoints.insert(index, point);
     m_ctrlItems.insert(index, pointItem);
-    updateRoute();
+    // update point item pos
+    pointItem->setPos(GraphicsMap::toScene(point.coord));
+    //
+    updatePolylineAndText(index, m_routePoints.size()-1);
     //
     emit added(index, point);
     return pointItem;
@@ -41,12 +54,13 @@ MapRoutePoint *MapRouteItem::replace(const int &index, const MapRouteItem::Point
     if(m_routePoints.value(index) == point)
         return m_ctrlItems.value(index);
 
-    delete m_ctrlItems.value(index);
     //
-    auto pointItem = createPoint();
     m_routePoints.replace(index, point);
-    m_ctrlItems.replace(index, pointItem);
-    updateRoute();
+    // update point item pos
+    auto pointItem = m_ctrlItems.value(index);;
+    pointItem->setPos(GraphicsMap::toScene(point.coord));
+    //
+    updatePolylineAndText(index, index);
     //
     emit updated(index, point);
     return pointItem;
@@ -59,7 +73,7 @@ void MapRouteItem::remove(const int &index)
 
     auto coord = m_routePoints.takeAt(index);
     delete m_ctrlItems.takeAt(index);
-    updateRoute();
+    updatePolylineAndText(index, m_routePoints.size()-1);
     //
     emit removed(index, coord);
 }
@@ -78,9 +92,12 @@ const QVector<MapRoutePoint*> &MapRouteItem::setPoints(const QVector<MapRouteIte
     // make up the newly
     m_routePoints = points;
     for(int i = 0; i < points.size(); ++i) {
-       m_ctrlItems.append(createPoint());
+        auto pointItem = createPoint();
+        m_ctrlItems.append(pointItem);
+        pointItem->setPos(GraphicsMap::toScene(points.at(i).coord));
     }
-    updateRoute();
+    //
+    updatePolylineAndText(0, m_routePoints.size()-1);
     //
     emit changed();
     return m_ctrlItems;
@@ -91,34 +108,111 @@ const QVector<MapRoutePoint *> &MapRouteItem::points() const
     return m_ctrlItems;
 }
 
+bool MapRouteItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
+{
+    if(!m_editable)
+        return false;
+    auto ctrlPoint = dynamic_cast<MapRoutePoint*>(watched);
+    switch (event->type()) {
+    case QEvent::GraphicsSceneMouseMove:
+    case QEvent::GraphicsSceneMouseRelease:
+    {
+        // get the index which respond to polygon edge point
+        int index = m_ctrlItems.indexOf(ctrlPoint);
+        // update the point data
+        auto point = m_routePoints.at(index);
+        point.coord = GraphicsMap::toCoordinate(ctrlPoint->pos());
+        m_routePoints.replace(index, point);
+        // update the polyline
+        updatePolylineAndText(-1, -1);  // negative value means than only polyline will be updated
+        //
+        emit updated(index, point);
+        break;
+    }
+    case QEvent::GraphicsSceneHoverEnter:
+    {
+        ctrlPoint->setBrush(Qt::white);
+        break;
+    }
+    case QEvent::GraphicsSceneHoverLeave:
+    {
+        ctrlPoint->setBrush(Qt::lightGray);
+        break;
+    }
+    default:
+        break;
+    }
+    return false;
+}
+
+QVariant MapRouteItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+   if(change != ItemSceneHasChanged)
+       return QGraphicsPathItem::itemChange(change, value);
+
+   m_sceneAdded = true;
+   for(auto ctrlPoint : m_ctrlItems) {
+       // control point's move event help us to move polygon point
+       ctrlPoint->installSceneEventFilter(this);
+   }
+   return QGraphicsPathItem::itemChange(change, value);
+}
+
 /// 更新QPainterPath的路径
-/// 更新多个航点的位置与文本
-void MapRouteItem::updateRoute()
+/// 更新从beginIndex和endIndex之间多个航点的文字
+void MapRouteItem::updatePolylineAndText(int beginIndex, int endIndex)
 {
     // update path
+    if(m_routePoints.isEmpty()) {
+        setPath(QPainterPath());
+        return;
+    }
+    QPainterPath path(GraphicsMap::toScene(m_routePoints.first().coord));
+    for(int i = 1; i < m_routePoints.size(); ++i) {
+        path.lineTo(GraphicsMap::toScene(m_routePoints.at(i).coord));
+    }
+    setPath(path);
 
-
+    // update point item text if coulud
+    if(!m_autoNumber)
+        return;
+    for(int i = qMax(0, beginIndex); i < m_ctrlItems.size() && i <= endIndex; ++i) {
+        m_ctrlItems.at(i)->setText(QString::number(i));
+    }
 }
 
 MapRoutePoint *MapRouteItem::createPoint()
 {
     auto pointItem = new MapRoutePoint;
     pointItem->setParentItem(this);
-    pointItem->installSceneEventFilter(this);
+    pointItem->setAcceptHoverEvents(true);
+    if(m_sceneAdded)
+        pointItem->installSceneEventFilter(this);
     return pointItem;
 }
 
 MapRoutePoint::MapRoutePoint()
 {
-    this->setRect(-5, -5, 10, 10);
+    this->setRect(-10, -10, 20, 20);
+    this->setPen(QPen(Qt::darkGray));
+    this->setBrush(Qt::lightGray);
+    this->setCursor(Qt::DragMoveCursor);
+    this->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    this->setFlag(QGraphicsItem::ItemIsMovable);
+    //
+    auto font = m_text.font();
+    font.setFamily("Microsoft YaHei");
+    m_text.setBrush(Qt::black);
+    m_text.setParentItem(this);
 }
 
 void MapRoutePoint::setText(const QString &text)
 {
     m_text.setText(text);
+    m_text.setPos(-m_text.boundingRect().center());
 }
 
 void MapRoutePoint::setAnimation(bool on)
 {
-
+    Q_UNUSED(on)
 }
