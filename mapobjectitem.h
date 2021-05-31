@@ -24,8 +24,6 @@ public:
     void setIcon(const QString &url);
     /// 设置图标为纯色，传QColor()可以取消纯色
     void setColor(const QColor &color, qreal strength = 1.0);
-    /// 设置旋转
-    void setRotation(const float &yaw);
 
 public:
     /// 获取所有的实例
@@ -39,7 +37,6 @@ private:
 
 private:
     QGeoCoordinate m_coord;
-    float          m_yaw;
 };
 
 #endif // MAPOBJECTITEM_H

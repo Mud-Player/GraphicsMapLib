@@ -109,14 +109,6 @@ void MapObjectItem::setColor(const QColor &color, qreal strength)
     effect->setStrength(strength);
 }
 
-void MapObjectItem::setRotation(const float &yaw)
-{
-    if(qFuzzyCompare(yaw, m_yaw))
-        return;
-    m_yaw = yaw;
-    setRotation(m_yaw);
-}
-
 const QSet<MapObjectItem *> &MapObjectItem::items()
 {
     return m_items;
