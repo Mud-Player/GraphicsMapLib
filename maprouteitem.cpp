@@ -2,6 +2,7 @@
 #include "graphicsmap.h"
 
 MapRouteItem::MapRouteItem() :
+    m_editable(true),
     m_sceneAdded(false),
     m_autoNumber(true)
 {
@@ -14,6 +15,18 @@ MapRouteItem::MapRouteItem() :
     pen.setJoinStyle(Qt::RoundJoin);
     pen.setColor(Qt::white);
     this->setPen(pen);
+}
+
+void MapRouteItem::setEditable(const bool &editable)
+{
+    if(m_editable == editable)
+        return;
+    m_editable = editable;
+
+    for(auto &ctrlPoint : m_ctrlItems) {
+        ctrlPoint->setFlag(QGraphicsItem::ItemIsMovable, editable);
+        ctrlPoint->setCursor(editable ? Qt::DragMoveCursor : Qt::ArrowCursor);
+    }
 }
 
 void MapRouteItem::setAutoNumber(bool on)
@@ -196,9 +209,7 @@ MapRoutePoint::MapRoutePoint()
     this->setRect(-10, -10, 20, 20);
     this->setPen(QPen(Qt::darkGray));
     this->setBrush(Qt::lightGray);
-    this->setCursor(Qt::DragMoveCursor);
     this->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    this->setFlag(QGraphicsItem::ItemIsMovable);
     //
     auto font = m_text.font();
     font.setFamily("Microsoft YaHei");

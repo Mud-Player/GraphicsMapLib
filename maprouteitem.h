@@ -25,6 +25,8 @@ public:
     };
 public:
     MapRouteItem();
+    /// 控制可编辑性
+    void setEditable(const bool &editable);
     /// 是否自动航点编号，默认打开从0编号
     void setAutoNumber(bool on);
     /// 添加航点
