@@ -20,36 +20,13 @@ GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView
     m_type(0),
     m_isloading(false),
     m_hasPendingLoad(false),
-    m_zoom(1)
+    m_zoom(1),
+    m_minZoom(1),
+    m_maxZoom(20)
 {
     qRegisterMetaType<GraphicsMap::TileSpec>("GraphicsMap::TileSpec");
 
-    // connect those necessary slot for map tile loading
-    m_mapThread = new GraphicsMapThread;
-    connect(this, &GraphicsMap::tileRequested, m_mapThread, &GraphicsMapThread::requestTile, Qt::QueuedConnection);
-    connect(this, &GraphicsMap::pathRequested, m_mapThread, &GraphicsMapThread::requestPath, Qt::QueuedConnection);
-    connect(m_mapThread, &GraphicsMapThread::tileToAdd, this, [&](QGraphicsItem* item){
-        this->scene()->addItem(item);
-        m_tiles.insert(item);
-    }, Qt::QueuedConnection);
-    connect(m_mapThread, &GraphicsMapThread::tileToRemove, this, [&](QGraphicsItem* item){
-        this->scene()->removeItem(item);
-        m_tiles.remove(item);
-    }, Qt::QueuedConnection);
-    connect(m_mapThread, &GraphicsMapThread::requestFinished, this, [&](){
-        m_isloading = false;
-        if(m_hasPendingLoad) {
-            updateTile();
-            m_hasPendingLoad = false;
-        }
-    }, Qt::QueuedConnection);
-    // TODO: We have to use Qt::QueuedConnection, if not, we will see the map twinkle when scale
-    connect(this->horizontalScrollBar(), &QScrollBar::valueChanged, this, [&](){
-    if(m_isloading)
-        m_hasPendingLoad = true;
-    else
-        updateTile();
-    }, Qt::QueuedConnection);
+    init();
     //
     this->scene()->setSceneRect(-SCENE_LEN/2, -SCENE_LEN/2, SCENE_LEN, SCENE_LEN);
     setZoomLevel(2);
@@ -73,7 +50,7 @@ void GraphicsMap::setTilePath(const QString &path)
 
 void GraphicsMap::setZoomLevel(const float &zoom)
 {
-    m_zoom = qBound(0.0f, zoom, 20.0f);
+    m_zoom = qBound(m_minZoom, zoom, m_maxZoom);
     auto zoomLevelDiff = m_zoom - ZOOM_BASE;
     auto scaleValue = qPow(2, zoomLevelDiff);
     setTransform(QTransform::fromScale(scaleValue, scaleValue));
@@ -148,6 +125,51 @@ quint8 GraphicsMap::mapType(const QString &path)
     return m_mapTypes.indexOf(path)+1;
 }
 
+void GraphicsMap::resizeEvent(QResizeEvent *event)
+{
+    double len = qMax(event->size().width(), event->size().height());
+    auto zoom = log(len/SCENE_LEN) / log(2);
+    m_minZoom = zoom + ZOOM_BASE;
+    setZoomLevel(m_zoom);
+}
+
+void GraphicsMap::init()
+{
+    m_mapThread = new GraphicsMapThread;
+    // connect those necessary slot for map tile loading
+    connect(this, &GraphicsMap::tileRequested, m_mapThread, &GraphicsMapThread::requestTile, Qt::QueuedConnection);
+    connect(this, &GraphicsMap::pathRequested, m_mapThread, &GraphicsMapThread::requestPath, Qt::QueuedConnection);
+    //
+    connect(m_mapThread, &GraphicsMapThread::tileToAdd, this, [&](QGraphicsItem* item){
+        this->scene()->addItem(item);
+        m_tiles.insert(item);
+    }, Qt::QueuedConnection);
+    connect(m_mapThread, &GraphicsMapThread::tileToRemove, this, [&](QGraphicsItem* item){
+        this->scene()->removeItem(item);
+        m_tiles.remove(item);
+    }, Qt::QueuedConnection);
+    connect(m_mapThread, &GraphicsMapThread::requestFinished, this, [&](){
+        m_isloading = false;
+        if(m_hasPendingLoad) {
+            updateTile();
+            m_hasPendingLoad = false;
+        }
+    }, Qt::QueuedConnection);
+    // TODO: We have to use Qt::QueuedConnection, if not, we will see the map twinkle when scale
+    connect(this->horizontalScrollBar(), &QScrollBar::valueChanged, this, [&](){
+    if(m_isloading)
+        m_hasPendingLoad = true;
+    else
+        updateTile();
+    }, Qt::QueuedConnection);
+    connect(this->verticalScrollBar(), &QScrollBar::valueChanged, this, [&](){
+    if(m_isloading)
+        m_hasPendingLoad = true;
+    else
+        updateTile();
+    }, Qt::QueuedConnection);
+}
+
 void GraphicsMap::updateTile()
 {
     quint8 intZoom = qFloor(m_zoom+0.5);
@@ -163,9 +185,14 @@ void GraphicsMap::updateTile()
     if(yBegin < 0) yBegin = 0;
     if(xEnd >= tileCount) xEnd = tileCount - 1;
     if(yEnd >= tileCount) yEnd = tileCount - 1;
+    TileSpec topLeft{m_type, intZoom, static_cast<quint32>(xBegin), static_cast<quint32>(yBegin)};
+    TileSpec bottomRight{m_type, intZoom, static_cast<quint32>(xEnd), static_cast<quint32>(yEnd)};
+    if(m_preTopLeft == topLeft && m_preBottomRight == bottomRight)
+        return;
+    m_preTopLeft = topLeft;
+    m_preBottomRight = bottomRight;
     m_isloading = true;
-    emit tileRequested({m_type, intZoom, static_cast<quint32>(xBegin), static_cast<quint32>(yBegin)}, {m_type, intZoom, static_cast<quint32>(xEnd), static_cast<quint32>(yEnd)});
-
+    emit tileRequested(topLeft, bottomRight);
 }
 
 GraphicsMapThread::TileCacheNode::~TileCacheNode()

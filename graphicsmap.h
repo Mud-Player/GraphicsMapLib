@@ -65,11 +65,16 @@ public:
     /// 通过资源路径，获取唯一对应的资源类型
     static quint8 mapType(const QString &path);
 
+
 signals:
     void tileRequested(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight);
     void pathRequested(const QString &path);
 
+protected:
+    virtual void resizeEvent(QResizeEvent *event) override; ///< 用于限制地图最小缩放等级
+
 private:
+    void init();
     void updateTile();
 
 private:
@@ -79,9 +84,14 @@ private:
     QSet<QGraphicsItem*> m_tiles;
     quint8               m_type;           ///< 瓦片资源类型
     //
+    GraphicsMap::TileSpec m_preTopLeft;
+    GraphicsMap::TileSpec m_preBottomRight;
+    //
     bool m_isloading;
     bool m_hasPendingLoad;
     float m_zoom;
+    float m_minZoom;
+    float m_maxZoom;
 };
 
 inline uint qHash(const GraphicsMap::TileSpec &key, uint seed)
