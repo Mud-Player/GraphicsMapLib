@@ -354,12 +354,16 @@ QGraphicsPixmapItem *GraphicsMapThread::loadTileItem(const GraphicsMap::TileSpec
 {
     int tileCount = qPow(2, tileSpec.zoom);
     //
-    QString fileName = QString("%1/%2/%3/%4.jpg")
+    QString fileName = QString("%1/%2/%3/%4")
             .arg(m_path)
             .arg(tileSpec.zoom)
             .arg(tileSpec.x)
             .arg(m_yInverted ? tileCount - tileSpec.y - 1 : tileSpec.y);
-    if(!QFileInfo::exists(fileName))
+    if(QFileInfo::exists(fileName+".jpg"))
+        fileName += ".jpg";
+    else if(QFileInfo::exists(fileName+".png"))
+        fileName += ".png";
+    else
         return nullptr;
 
     auto tileItem = new QGraphicsPixmapItem(fileName);
