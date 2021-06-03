@@ -17,6 +17,7 @@ add_library(${PROJECT_NAME} SHARED
   interactivemap.h
   mapellipseitem.h
   mappolygonitem.h
+  maprangeringitem.h
   maprouteitem.h
   maptrailitem.h
   mapobjectitem.h
@@ -24,6 +25,7 @@ add_library(${PROJECT_NAME} SHARED
   interactivemap.cpp
   mapellipseitem.cpp
   mappolygonitem.cpp
+  maprangeringitem.cpp
   maprouteitem.cpp
   maptrailitem.cpp
   mapobjectitem.cpp

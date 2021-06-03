@@ -67,6 +67,7 @@ public:
 
 
 signals:
+    void zoomChanged(const float &zoom);
     void tileRequested(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight);
     void pathRequested(const QString &path);
 
@@ -87,8 +88,8 @@ private:
     GraphicsMap::TileSpec m_preTopLeft;
     GraphicsMap::TileSpec m_preBottomRight;
     //
-    bool m_isloading;
-    bool m_hasPendingLoad;
+    bool  m_isloading;
+    bool  m_hasPendingLoad;
     float m_zoom;
     float m_minZoom;
     float m_maxZoom;

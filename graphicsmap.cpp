@@ -50,6 +50,8 @@ void GraphicsMap::setTilePath(const QString &path)
 
 void GraphicsMap::setZoomLevel(const float &zoom)
 {
+    if(m_zoom == zoom)
+        return;
     m_zoom = qBound(m_minZoom, zoom, m_maxZoom);
     auto zoomLevelDiff = m_zoom - ZOOM_BASE;
     auto scaleValue = qPow(2, zoomLevelDiff);
@@ -59,6 +61,7 @@ void GraphicsMap::setZoomLevel(const float &zoom)
         m_hasPendingLoad = true;
     else
         updateTile();
+    emit zoomChanged(m_zoom);
 }
 
 const float &GraphicsMap::zoomLevel() const
