@@ -14,24 +14,10 @@
 #define TILE_LEN 256  ///< 瓦片长度，标准的都是256 * 256
 #define SCENE_LEN ((1<<ZOOM_BASE) * TILE_LEN)   ///< 存放瓦片的场景大小
 
-GraphicsMap::TileSpec GraphicsMap::TileSpec::rise() const
-{
-    return GraphicsMap::TileSpec({this->zoom-1, this->x/2, this->y/2});
-}
-
-bool GraphicsMap::TileSpec::operator <(const GraphicsMap::TileSpec &rhs) const
-{
-    qlonglong lhsVal = (qlonglong(this->zoom)<<48) + (qlonglong(this->x)<< 24) + this->y;
-    qlonglong rhsVal = (qlonglong(rhs.zoom)<<48) + (qlonglong(rhs.x)<< 24) + rhs.y;
-    return  lhsVal < rhsVal;
-}
-
-bool GraphicsMap::TileSpec::operator==(const GraphicsMap::TileSpec &rhs) const
-{
-    return (this->zoom == rhs.zoom) && (this->x == rhs.x) && (this->y == rhs.y);
-}
+QStringList GraphicsMap::m_mapTypes;
 
 GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView(scene, parent),
+    m_type(0),
     m_isloading(false),
     m_hasPendingLoad(false),
     m_zoom(1)
@@ -41,6 +27,7 @@ GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView
     // connect those necessary slot for map tile loading
     m_mapThread = new GraphicsMapThread;
     connect(this, &GraphicsMap::tileRequested, m_mapThread, &GraphicsMapThread::requestTile, Qt::QueuedConnection);
+    connect(this, &GraphicsMap::pathRequested, m_mapThread, &GraphicsMapThread::requestPath, Qt::QueuedConnection);
     connect(m_mapThread, &GraphicsMapThread::tileToAdd, this, [&](QGraphicsItem* item){
         this->scene()->addItem(item);
         m_tiles.insert(item);
@@ -79,7 +66,9 @@ GraphicsMap::~GraphicsMap()
 
 void GraphicsMap::setTilePath(const QString &path)
 {
-    m_mapThread->setTilePath(path);
+    m_type = mapType(path);
+    emit pathRequested(path);
+    updateTile();
 }
 
 void GraphicsMap::setZoomLevel(const float &zoom)
@@ -151,23 +140,31 @@ QPointF GraphicsMap::toScene(const QGeoCoordinate &coord)
     return {x, -y};
 }
 
+/// 从1编号
+quint8 GraphicsMap::mapType(const QString &path)
+{
+    if(!m_mapTypes.contains(path))
+        m_mapTypes.append(path);
+    return m_mapTypes.indexOf(path)+1;
+}
+
 void GraphicsMap::updateTile()
 {
-    int intZoom = qFloor(m_zoom+0.5);
+    quint8 intZoom = qFloor(m_zoom+0.5);
     //
-    int tileCount = qPow(2, intZoom);
+    qint32 tileCount = qPow(2, intZoom);
     auto topLeftPos = mapToScene(viewport()->geometry().topLeft());
     auto bottomRightPos = mapToScene(viewport()->geometry().bottomRight());
-    int xBegin = (topLeftPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount - 1;
-    int yBegin = (topLeftPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount - 1;
-    int xEnd = (bottomRightPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount + 1;
-    int yEnd = (bottomRightPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount + 1;
+    qint32 xBegin = (topLeftPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount - 1;
+    qint32 yBegin = (topLeftPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount - 1;
+    qint32 xEnd = (bottomRightPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount + 1;
+    qint32 yEnd = (bottomRightPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount + 1;
     if(xBegin < 0) xBegin = 0;
     if(yBegin < 0) yBegin = 0;
     if(xEnd >= tileCount) xEnd = tileCount - 1;
     if(yEnd >= tileCount) yEnd = tileCount - 1;
     m_isloading = true;
-    emit tileRequested({intZoom, xBegin, yBegin}, {intZoom, xEnd, yEnd});
+    emit tileRequested({m_type, intZoom, static_cast<quint32>(xBegin), static_cast<quint32>(yBegin)}, {m_type, intZoom, static_cast<quint32>(xEnd), static_cast<quint32>(yEnd)});
 
 }
 
@@ -177,8 +174,8 @@ GraphicsMapThread::TileCacheNode::~TileCacheNode()
 }
 
 GraphicsMapThread::GraphicsMapThread() :
-    m_preTopLeft({0, 0, 0}),
-    m_preBottomRight({0, 0, 0}),
+    m_preTopLeft({0, 0, 0, 0}),
+    m_preBottomRight({0, 0, 0, 0}),
     m_yInverted(false)
 {
     m_tileCache.setMaxCost(1000);
@@ -199,6 +196,15 @@ GraphicsMapThread::~GraphicsMapThread()
 
 void GraphicsMapThread::requestTile(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight)
 {
+    // hide all tile items if tile resource path is invalid
+    if(m_path.isEmpty()) {
+        for(auto &tile : m_tileShowedSet) {
+            hideItem(tile);
+        }
+        emit requestFinished();
+        return;
+    }
+    // just ignore the requeset if rect arec not changed
     if(m_preTopLeft == topLeft && m_preBottomRight == bottomRight) {
         emit requestFinished();
         return;
@@ -207,27 +213,28 @@ void GraphicsMapThread::requestTile(const GraphicsMap::TileSpec &topLeft, const 
     // y向下递增
     QSet<GraphicsMap::TileSpec> curViewSet;
     QSet<GraphicsMap::TileSpec> preViewSet;
+    const auto &type = topLeft.type;
     {
-        const int &zoom = topLeft.zoom;
-        const int xBegin = topLeft.x;
-        const int xEnd = bottomRight.x;
-        const int yBegin = topLeft.y;
-        const int yEnd = bottomRight.y;
-        for(int x = xBegin; x <= xEnd; ++x) {
-            for(int y = yBegin; y <= yEnd; ++y) {
-                curViewSet.insert({zoom, x, y});
+        const auto &zoom = topLeft.zoom;
+        const auto xBegin = topLeft.x;
+        const auto xEnd = bottomRight.x;
+        const auto yBegin = topLeft.y;
+        const auto yEnd = bottomRight.y;
+        for(auto x = xBegin; x <= xEnd; ++x) {
+            for(auto y = yBegin; y <= yEnd; ++y) {
+                curViewSet.insert({type, zoom, x, y});
             }
         }
     }
     {
-        const int &zoom = m_preTopLeft.zoom;
-        const int xBegin = m_preTopLeft.x;
-        const int xEnd = m_preBottomRight.x;
-        const int yBegin = m_preTopLeft.y;
-        const int yEnd = m_preBottomRight.y;
-        for(int x = xBegin; x <= xEnd; ++x) {
-            for(int y = yBegin; y <= yEnd; ++y) {
-                preViewSet.insert({zoom, x, y});
+        const auto &zoom = m_preTopLeft.zoom;
+        const auto xBegin = m_preTopLeft.x;
+        const auto xEnd = m_preBottomRight.x;
+        const auto yBegin = m_preTopLeft.y;
+        const auto yEnd = m_preBottomRight.y;
+        for(auto x = xBegin; x <= xEnd; ++x) {
+            for(auto y = yBegin; y <= yEnd; ++y) {
+                preViewSet.insert({type, zoom, x, y});
             }
         }
     }
@@ -236,27 +243,20 @@ void GraphicsMapThread::requestTile(const GraphicsMap::TileSpec &topLeft, const 
     m_preBottomRight = bottomRight;
 
     // compute which to load and which to unload
-    QSet<GraphicsMap::TileSpec> needToShowTileSet;
-    QSet<GraphicsMap::TileSpec> needToHideTileSet;
+    QSet<GraphicsMap::TileSpec> needToHideTileSet = m_tileTriedToShowdSet;
+    m_tileTriedToShowdSet.clear();
     {
         QSetIterator<GraphicsMap::TileSpec> iter(curViewSet);
         while (iter.hasNext()) {
             auto tileSpec = iter.next();
-            createAscendingTileCache(tileSpec, needToShowTileSet);
+            createAscendingTileCache(tileSpec, m_tileTriedToShowdSet);
         }
     }
-    {
-        QSetIterator<GraphicsMap::TileSpec> iter(preViewSet);
-        while (iter.hasNext()) {
-            auto tileSpec = iter.next();
-            createAscendingTileCache(tileSpec, needToHideTileSet);
-        }
-    }
-    QSet<GraphicsMap::TileSpec> realToHideTileSet = needToHideTileSet - needToShowTileSet;
+    QSet<GraphicsMap::TileSpec> realToHideTileSet = needToHideTileSet - m_tileTriedToShowdSet;
 
     // update the scene tiles
     {
-        QSetIterator<GraphicsMap::TileSpec> iter(needToShowTileSet);
+        QSetIterator<GraphicsMap::TileSpec> iter(m_tileTriedToShowdSet);
         while (iter.hasNext()) {
             auto &tileSpec = iter.next();
             showItem(tileSpec);
@@ -273,9 +273,12 @@ void GraphicsMapThread::requestTile(const GraphicsMap::TileSpec &topLeft, const 
     emit requestFinished();
 }
 
-void GraphicsMapThread::setTilePath(const QString &path)
+/// \note 该槽函数应该在多线程通过队列调用,以免多线程正在进行上一次资源路径的加载操作
+void GraphicsMapThread::requestPath(const QString &path)
 {
-    m_path = path;
+   if(path == m_path)
+       return;
+   m_path = path;
 }
 
 void GraphicsMapThread::setTileCacheCount(const int &count)

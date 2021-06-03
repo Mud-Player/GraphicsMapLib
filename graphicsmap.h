@@ -21,12 +21,22 @@ class GRAPHICSMAPLIB_EXPORT GraphicsMap : public QGraphicsView
 public:
     /// 瓦片参数描述结构体
     struct TileSpec {
-        int zoom;
-        int x;
-        int y;
-        TileSpec rise() const;
-        bool operator< (const TileSpec &rhs) const;
-        bool operator== (const TileSpec &rhs) const;
+        quint8 type;  ///< 瓦片类型（用于标识不同路劲资源的地图)
+        quint8 zoom;  ///< 瓦片层级
+        quint32 x;    ///< 瓦片X轴编号
+        quint32 y;    ///< 瓦片Y轴编号
+        inline TileSpec rise() const {
+            return GraphicsMap::TileSpec({type, static_cast<quint8>(zoom-1), x/2, y/2});
+        }
+        inline bool operator< (const TileSpec &rhs) const {
+            return this->toLong() < rhs.toLong();
+        };
+        inline bool operator== (const TileSpec &rhs) const {
+            return this->toLong() == rhs.toLong();
+        };
+        inline qlonglong toLong() const {
+            return (qlonglong(type)<<52) | (qlonglong(zoom)<< 44) | (qlonglong(x)<< 22) | y;
+        };
     };
 
     GraphicsMap(QGraphicsScene *scene, QWidget *parent = nullptr);
@@ -40,29 +50,34 @@ public:
     void setTileCacheCount(const int &count);
     /// 设置是否反转Y轴瓦片编号(标准下载的瓦片Y轴编号都是自上而下增加，不过某些情况可能是反的)
     void setYInverted(const bool &isInverted);
+    /// 居中
+    void centerOn(const QGeoCoordinate &coord);
     /// 获取窗口坐标对应的经纬度
     QGeoCoordinate toCoordinate(const QPoint &point) const;
     /// 获取经纬度对应的窗口坐标
     QPoint toPoint(const QGeoCoordinate &coord) const;
-    /// 居中
-    void centerOn(const QGeoCoordinate &coord);
 
 public:
     /// 获取场景坐标对应的经纬度
     static QGeoCoordinate toCoordinate(const QPointF &point);
     /// 获取经纬度对应的场景坐标
     static QPointF toScene(const QGeoCoordinate &coord);
-
+    /// 通过资源路径，获取唯一对应的资源类型
+    static quint8 mapType(const QString &path);
 
 signals:
     void tileRequested(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight);
+    void pathRequested(const QString &path);
 
 private:
     void updateTile();
 
 private:
-    GraphicsMapThread        *m_mapThread;
+    static QStringList m_mapTypes; ///< 资源路径类型
+private:
+    GraphicsMapThread    *m_mapThread;
     QSet<QGraphicsItem*> m_tiles;
+    quint8               m_type;           ///< 瓦片资源类型
     //
     bool m_isloading;
     bool m_hasPendingLoad;
@@ -82,6 +97,7 @@ inline uint qHash(const GraphicsMap::TileSpec &key, uint seed)
 class GraphicsMapThread : public QObject
 {
     Q_OBJECT
+
     /// 瓦片缓存节点，配合QCache实现缓存机制
     struct TileCacheNode {
         GraphicsMap::TileSpec tileSpec;
@@ -93,10 +109,14 @@ public:
     GraphicsMapThread();
     ~GraphicsMapThread();
 
+
 public slots:
+    /// 请求刷新瓦片区域
     void requestTile(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight);
-    /// 设置瓦片路径
-    void setTilePath(const QString &path);
+    /// 请求更改瓦片资源来源
+    void requestPath(const QString &path);
+
+public:
     /// 设置瓦片缓存数量
     void setTileCacheCount(const int &count);
     /// 设置是否Y轴瓦片编号(标准下载的瓦片Y轴编号都是自上而下增加，不过某些情况可能是反的)
@@ -116,7 +136,8 @@ private:
 
 private:
     QCache<GraphicsMap::TileSpec, TileCacheNode> m_tileCache; ///<已加载瓦片缓存
-    QSet<GraphicsMap::TileSpec>    m_tileShowedSet;           ///<已显示瓦片编号集合(存在依赖关系的瓦片，实际上只有顶层才显示，但是子瓦片仍然被当作Showed)
+    QSet<GraphicsMap::TileSpec>    m_tileTriedToShowdSet;     ///<已尝试显示瓦片编号集合(上一次调用过showItem的所有瓦片，存在依赖关系的瓦片，实际上只有顶层才显示)
+    QSet<GraphicsMap::TileSpec>    m_tileShowedSet;           ///<实际显示瓦片编号集合
     //
     GraphicsMap::TileSpec m_preTopLeft;
     GraphicsMap::TileSpec m_preBottomRight;
