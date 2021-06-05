@@ -3,6 +3,8 @@
 #include "mappolygonitem.h"
 #include "maprouteitem.h"
 #include "mapobjectitem.h"
+#include "maprangeringitem.h"
+#include "maptrailitem.h"
 #include <QDebug>
 
 InteractiveMap::InteractiveMap(QGraphicsScene *scene, QWidget *parent) : GraphicsMap(scene, parent),
@@ -26,6 +28,38 @@ void InteractiveMap::setOperator(InteractiveMapOperator *op)
     m_operator = op;
     // process ready funtion with newlly operator
     op->ready();
+}
+
+void InteractiveMap::clear()
+{
+    // IMPORT
+    if(m_operator) m_operator->end();
+    {
+        auto items = MapEllipseItem::items();
+        qDeleteAll(items);
+    }
+    {
+        auto items = MapObjectItem::items();
+        qDeleteAll(items);
+    }
+    {
+        auto items = MapPolygonItem::items();
+        qDeleteAll(items);
+    }
+    {
+        auto items = MapRangeRingItem::items();
+        qDeleteAll(items);
+    }
+    {
+        auto items = MapRouteItem::items();
+        qDeleteAll(items);
+    }
+    {
+        auto items = MapTrailItem::items();
+        qDeleteAll(items);
+    }
+    // IMPORT
+    if(m_operator) m_operator->ready();
 }
 
 void InteractiveMap::setCenter(const MapObjectItem *obj)

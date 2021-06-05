@@ -23,6 +23,7 @@ MapPolygonItem::MapPolygonItem() :
 MapPolygonItem::~MapPolygonItem()
 {
     m_items.remove(this);
+    qDeleteAll(m_ctrlPoints);
 }
 
 void MapPolygonItem::setEditable(const bool &editable)

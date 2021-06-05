@@ -2,6 +2,8 @@
 #include "graphicsmap.h"
 #include "mapobjectitem.h"
 
+QSet<MapTrailItem*> MapTrailItem::m_items;
+
 MapTrailItem::MapTrailItem() :
     m_attachObj(nullptr)
 {
@@ -12,6 +14,13 @@ MapTrailItem::MapTrailItem() :
     pen.setJoinStyle(Qt::RoundJoin);
     pen.setColor(Qt::yellow);
     this->setPen(pen);
+    //
+    m_items.insert(this);
+}
+
+MapTrailItem::~MapTrailItem()
+{
+    m_items.remove(this);
 }
 
 void MapTrailItem::addCoordinate(const QGeoCoordinate &coord)
@@ -57,4 +66,9 @@ void MapTrailItem::detach()
         disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTrailItem::addCoordinate);
     m_attachObj = nullptr;
     clear();
+}
+
+const QSet<MapTrailItem *> &MapTrailItem::items()
+{
+    return m_items;
 }

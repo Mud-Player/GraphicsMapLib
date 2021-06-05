@@ -16,6 +16,7 @@ class GRAPHICSMAPLIB_EXPORT MapTrailItem : public QObject, public QGraphicsPathI
     Q_OBJECT
 public:
     MapTrailItem();
+    ~MapTrailItem();
     /// 添加经纬点轨迹（该函数会自动优化该点是否添加到轨迹点）
     void addCoordinate(const QGeoCoordinate &coord);
     /// 清除轨迹
@@ -25,6 +26,12 @@ public:
     /// 取消依附地图对象，后续手动更新位置
     void detach();
 
+public:
+    /// 获取所有的实例
+    static const QSet<MapTrailItem*> &items();
+
+private:
+    static QSet<MapTrailItem*> m_items;         ///< 所有实例
 private:
     QGeoCoordinate m_coord;    ///< 轨迹点0
     //

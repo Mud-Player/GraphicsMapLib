@@ -133,6 +133,11 @@ const QVector<MapRoutePoint *> &MapRouteItem::points() const
     return m_ctrlItems;
 }
 
+const QSet<MapRouteItem *> &MapRouteItem::items()
+{
+    return m_items;
+}
+
 bool MapRouteItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
 {
     if(!m_editable)

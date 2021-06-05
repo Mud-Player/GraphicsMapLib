@@ -8,6 +8,8 @@
 
 void qt_graphicsItem_highlightSelected(QGraphicsItem *item, QPainter *painter, const QStyleOptionGraphicsItem *option);
 
+QSet<MapRangeRingItem*> MapRangeRingItem::m_items;
+
 MapRangeRingItem::MapRangeRingItem() :
     m_attachObj(nullptr)
 {
@@ -19,6 +21,13 @@ MapRangeRingItem::MapRangeRingItem() :
     m_font.setPointSizeF(10);
     setCoordinate({0, 0});
     setRadius(60);
+    //
+    m_items.insert(this);
+}
+
+MapRangeRingItem::~MapRangeRingItem()
+{
+    m_items.remove(this);
 }
 
 void MapRangeRingItem::setCoordinate(const QGeoCoordinate &coord)
@@ -81,6 +90,11 @@ QPen MapRangeRingItem::pen() const
 QFont MapRangeRingItem::font() const
 {
     return m_font;
+}
+
+const QSet<MapRangeRingItem *> &MapRangeRingItem::items()
+{
+    return m_items;
 }
 
 QRectF MapRangeRingItem::boundingRect() const

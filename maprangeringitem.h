@@ -20,6 +20,7 @@ class GRAPHICSMAPLIB_EXPORT MapRangeRingItem : public QObject, public QGraphicsI
     Q_OBJECT
 public:
     explicit MapRangeRingItem();
+    ~MapRangeRingItem();
     /// 设置位置
     void setCoordinate(const QGeoCoordinate &coord);
     /// 设置半径
@@ -38,6 +39,10 @@ public:
     QFont font() const;
 
 public:
+    /// 获取所有的实例
+    static const QSet<MapRangeRingItem*> &items();
+
+public:
     virtual QRectF boundingRect() const override;
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
 
@@ -45,6 +50,8 @@ private:
     void updateBoundingRect();
     void drawEllipse(QPainter *painter, const float &radius);
 
+private:
+    static QSet<MapRangeRingItem*> m_items;         ///< 所有实例
 private:
     QPen   m_pen;
     QFont  m_font;
