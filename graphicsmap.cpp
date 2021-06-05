@@ -112,10 +112,10 @@ QGeoCoordinate GraphicsMap::toCoordinate(const QPointF &point)
 QPointF GraphicsMap::toScene(const QGeoCoordinate &coord)
 {
     /// NOTE: R = SCENE_LEN / 2PI
-    auto radLon = qDegreesToRadians(coord.longitude());
-    auto radLat = qDegreesToRadians(coord.latitude());
-    auto x = SCENE_LEN * radLon / 2.0 / M_PI;
-    auto y = SCENE_LEN / 2.0 / M_PI * qLn( qTan(M_PI_4+radLat/2.0) );
+    double radLon = qDegreesToRadians(coord.longitude());
+    double radLat = qDegreesToRadians(coord.latitude());
+    double x = SCENE_LEN * radLon / 2.0 / M_PI;
+    double y = SCENE_LEN / 2.0 / M_PI * qLn( qTan(M_PI_4+radLat/2.0) );
     // NOTO: as for Qt, it's y asscending from up to bottom
     return {x, -y};
 }

@@ -22,6 +22,10 @@ public:
     void setOperator(InteractiveMapOperator *op = nullptr);
     /// 清空所有地图元素
     void clear();
+    /// 保持对象居中，传空值可以取消设置
+    void setCenter(const MapObjectItem *obj);
+    /// 设置鼠标是否可以交互缩放
+    void setScaleable(bool on);
 
 protected:
     virtual void wheelEvent(QWheelEvent *e) override;
@@ -34,7 +38,12 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-    InteractiveMapOperator *m_operator;
+    InteractiveMapOperator *m_operator;     ///< 操作器
+    const MapObjectItem    *m_centerObj;    ///< 居中对象
+    QGraphicsView::DragMode m_dragMode;     ///< 拖拽模式(用于取消居中之后回到之前的模式)
+    QGraphicsView::ViewportAnchor m_anchor; ///< 鼠标锚点(用于取消居中之后回到之前的模式)
+    //
+    bool  m_scaleable;  ///< 是否可以鼠标缩放
 };
 
 /*!

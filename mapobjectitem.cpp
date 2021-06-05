@@ -1,6 +1,7 @@
 ﻿#include "mapobjectitem.h"
 #include "graphicsmap.h"
 #include <QGraphicsColorizeEffect>
+#include <QDebug>
 
 /* XPM */
 static const char *default_xpm[] = {

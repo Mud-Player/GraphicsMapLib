@@ -6,7 +6,9 @@
 #include <QDebug>
 
 InteractiveMap::InteractiveMap(QGraphicsScene *scene, QWidget *parent) : GraphicsMap(scene, parent),
-    m_operator(nullptr)
+    m_operator(nullptr),
+    m_centerObj(nullptr),
+    m_scaleable(true)
 {
 
 }
@@ -26,8 +28,41 @@ void InteractiveMap::setOperator(InteractiveMapOperator *op)
     op->ready();
 }
 
+void InteractiveMap::setCenter(const MapObjectItem *obj)
+{
+    if(m_centerObj)
+        disconnect(obj, &MapObjectItem::coordinateChanged, this, &GraphicsMap::centerOn);
+    // only case that we center on object at first that we should to save drag mode and anchor mode
+    else {
+        m_dragMode = this->dragMode();
+        m_anchor = this->transformationAnchor();
+    }
+    //
+    m_centerObj = obj;
+    if(m_centerObj) {
+        // We should not to drag map when object is always center on map
+        connect(obj, &MapObjectItem::coordinateChanged, this, &GraphicsMap::centerOn);
+        this->setDragMode(QGraphicsView::NoDrag);
+        this->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+    }
+    // restore previous drag mode if centerOn is unset
+    else {
+        this->setDragMode(m_dragMode);
+        this->setTransformationAnchor(m_anchor);
+    }
+}
+
+void InteractiveMap::setScaleable(bool on)
+{
+    m_scaleable = on;
+}
+
 void InteractiveMap::wheelEvent(QWheelEvent *e)
 {
+    if(!m_scaleable) {
+        e->accept();
+        return;
+    }
     bool increase = e->angleDelta().y() > 0;
     if(increase)
         this->setZoomLevel(zoomLevel() + 0.2);

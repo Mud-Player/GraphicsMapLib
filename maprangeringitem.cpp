@@ -14,7 +14,9 @@ MapRangeRingItem::MapRangeRingItem() :
     m_pen.setWidth(2);
     m_pen.setColor(Qt::green);
     m_pen.setCosmetic(true);
+    m_pen.setColor(QColor::fromRgb(100, 190, 181));
     m_font.setFamily("Microsoft YaHei");
+    m_font.setPointSizeF(10);
     setCoordinate({0, 0});
     setRadius(60);
 }
