@@ -14,6 +14,7 @@ MapRangeRingItem::MapRangeRingItem() :
     m_pen.setWidth(2);
     m_pen.setColor(Qt::green);
     m_pen.setCosmetic(true);
+    m_font.setFamily("Microsoft YaHei");
     setCoordinate({0, 0});
     setRadius(60);
 }
@@ -33,6 +34,8 @@ void MapRangeRingItem::setRadius(const float &km)
         return;
     m_radius = km;
     updateBoundingRect();
+    // 30km respond to 10 point size for font
+    m_font.setPointSizeF(km / 30 * 10);
 }
 
 void MapRangeRingItem::attach(MapObjectItem *obj)

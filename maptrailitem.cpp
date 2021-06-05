@@ -1,7 +1,9 @@
 ﻿#include "maptrailitem.h"
 #include "graphicsmap.h"
+#include "mapobjectitem.h"
 
-MapTrailItem::MapTrailItem()
+MapTrailItem::MapTrailItem() :
+    m_attachObj(nullptr)
 {
     auto pen = this->pen();
     pen.setWidth(2);
@@ -36,4 +38,23 @@ void MapTrailItem::clear()
 {
     setPath(QPainterPath());
     m_coord = QGeoCoordinate();
+}
+
+void MapTrailItem::attach(MapObjectItem *obj)
+{
+    if(m_attachObj)
+        disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTrailItem::addCoordinate);
+    //
+    clear();
+    m_attachObj = obj;
+    if(m_attachObj)
+        connect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTrailItem::addCoordinate);
+}
+
+void MapTrailItem::detach()
+{
+    if(m_attachObj)
+        disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTrailItem::addCoordinate);
+    m_attachObj = nullptr;
+    clear();
 }
