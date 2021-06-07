@@ -56,6 +56,7 @@ QSet<MapObjectItem*> MapObjectItem::m_items;
 MapObjectItem::MapObjectItem()
 {
     this->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+    this->setTransformationMode(Qt::SmoothTransformation);
     setIcon(QString());
     //
     m_items.insert(this);

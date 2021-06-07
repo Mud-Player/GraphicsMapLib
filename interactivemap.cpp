@@ -15,6 +15,217 @@ InteractiveMap::InteractiveMap(QGraphicsScene *scene, QWidget *parent) : Graphic
 
 }
 
+MapEllipseItem *InteractiveMap::addMapEllipse(int id)
+{
+    if(m_ellipseHash.contains(id))
+        delete m_ellipseHash.take(id);
+    auto item = new MapEllipseItem;
+    m_ellipseHash.insert(id, item);
+    return item;
+}
+
+void InteractiveMap::addMapEllipse(int id, MapEllipseItem *item)
+{
+    if(m_ellipseHash.contains(id))
+        delete m_ellipseHash.take(id);
+    m_ellipseHash.insert(id, item);
+}
+
+bool InteractiveMap::removeMapEllipse(int id)
+{
+    auto item = m_ellipseHash.take(id);
+    if(!item)
+        return false;
+    delete item;
+    return true;
+}
+
+void InteractiveMap::clearMapEllipse()
+{
+    qDeleteAll(m_ellipseHash.values());
+    m_ellipseHash.clear();
+}
+
+MapObjectItem *InteractiveMap::addMapObject(int id)
+{
+    if(m_objectHash.contains(id))
+        delete m_objectHash.take(id);
+    auto item = new MapObjectItem;
+    m_objectHash.insert(id, item);
+    return item;
+}
+
+void InteractiveMap::addMapObject(int id, MapObjectItem *item)
+{
+    if(m_objectHash.contains(id))
+        delete m_objectHash.take(id);
+    m_objectHash.insert(id, item);
+}
+
+MapObjectItem *InteractiveMap::getMapObject(int id)
+{
+    return m_objectHash.value(id);
+}
+
+bool InteractiveMap::removeMapObject(int id)
+{
+    auto item = m_objectHash.take(id);
+    if(!item)
+        return false;
+    delete item;
+    return true;
+}
+
+void InteractiveMap::clearMapObject()
+{
+    qDeleteAll(m_objectHash.values());
+    m_objectHash.clear();
+}
+
+MapPolygonItem *InteractiveMap::addMapPolygon(int id)
+{
+    if(m_polygonHash.contains(id))
+        delete m_polygonHash.take(id);
+    auto item = new MapPolygonItem;
+    m_polygonHash.insert(id, item);
+    return item;
+}
+
+void InteractiveMap::addMapPolygon(int id, MapPolygonItem *item)
+{
+    if(m_polygonHash.contains(id))
+        delete m_polygonHash.take(id);
+    m_polygonHash.insert(id, item);
+}
+
+MapPolygonItem *InteractiveMap::getMapPolygon(int id)
+{
+    return m_polygonHash.value(id);
+}
+
+bool InteractiveMap::removeMapPolygon(int id)
+{
+    auto item = m_polygonHash.take(id);
+    if(!item)
+        return false;
+    delete item;
+    return true;
+}
+
+void InteractiveMap::clearMapPolygon()
+{
+    qDeleteAll(m_polygonHash.values());
+    m_polygonHash.clear();
+}
+
+MapRangeRingItem *InteractiveMap::addMapRangeRing(int id)
+{
+    if(m_rangeRingHash.contains(id))
+        delete m_rangeRingHash.take(id);
+    auto item = new MapRangeRingItem;
+    m_rangeRingHash.insert(id, item);
+    return item;
+}
+
+void InteractiveMap::addMapRangeRing(int id, MapRangeRingItem *item)
+{
+    if(m_rangeRingHash.contains(id))
+        delete m_rangeRingHash.take(id);
+    m_rangeRingHash.insert(id, item);
+}
+
+MapRangeRingItem *InteractiveMap::getMapRangeRing(int id)
+{
+    return m_rangeRingHash.value(id);
+}
+
+bool InteractiveMap::removeMapRangeRing(int id)
+{
+    auto item = m_rangeRingHash.take(id);
+    if(!item)
+        return false;
+    delete item;
+    return true;
+}
+
+void InteractiveMap::clearMapRangeRing()
+{
+    qDeleteAll(m_rangeRingHash.values());
+    m_rangeRingHash.clear();
+}
+
+MapRouteItem *InteractiveMap::addMapRoute(int id)
+{
+    if(m_routeHash.contains(id))
+        delete m_routeHash.take(id);
+    auto item = new MapRouteItem;
+    m_routeHash.insert(id, item);
+    return item;
+}
+
+void InteractiveMap::addMapRoute(int id, MapRouteItem *item)
+{
+    if(m_routeHash.contains(id))
+        delete m_routeHash.take(id);
+    m_routeHash.insert(id, item);
+}
+
+MapRouteItem *InteractiveMap::getMapRoute(int id)
+{
+    return m_routeHash.value(id);
+}
+
+bool InteractiveMap::removeMapRoute(int id)
+{
+    auto item = m_routeHash.take(id);
+    if(!item)
+        return false;
+    delete item;
+    return true;
+}
+
+void InteractiveMap::clearMapRoute()
+{
+    qDeleteAll(m_routeHash.values());
+    m_routeHash.clear();
+}
+
+MapTrailItem *InteractiveMap::addMapTrail(int id)
+{
+    if(m_trailHash.contains(id))
+        delete m_trailHash.take(id);
+    auto item = new MapTrailItem;
+    m_trailHash.insert(id, item);
+    return item;
+}
+
+void InteractiveMap::addMapTrail(int id, MapTrailItem *item)
+{
+    if(m_trailHash.contains(id))
+        delete m_trailHash.take(id);
+    m_trailHash.insert(id, item);
+}
+
+MapTrailItem *InteractiveMap::getMapTrail(int id)
+{
+    return m_trailHash.value(id);
+}
+
+bool InteractiveMap::removeMapTrail(int id)
+{
+    auto item = m_trailHash.take(id);
+    if(!item)
+        return false;
+    delete item;
+    return true;
+}
+
+void InteractiveMap::clearMapTrail()
+{
+    qDeleteAll(m_trailHash.values());
+    m_trailHash.clear();
+}
+
 void InteractiveMap::setOperator(InteractiveMapOperator *op)
 {
     if(op == m_operator)
@@ -34,30 +245,14 @@ void InteractiveMap::clear()
 {
     // IMPORT
     if(m_operator) m_operator->end();
-    {
-        auto items = MapEllipseItem::items();
-        qDeleteAll(items);
-    }
-    {
-        auto items = MapObjectItem::items();
-        qDeleteAll(items);
-    }
-    {
-        auto items = MapPolygonItem::items();
-        qDeleteAll(items);
-    }
-    {
-        auto items = MapRangeRingItem::items();
-        qDeleteAll(items);
-    }
-    {
-        auto items = MapRouteItem::items();
-        qDeleteAll(items);
-    }
-    {
-        auto items = MapTrailItem::items();
-        qDeleteAll(items);
-    }
+
+    clearMapEllipse();
+    clearMapObject();
+    clearMapPolygon();
+    clearMapRangeRing();
+    clearMapRoute();
+    clearMapTrail();
+
     // IMPORT
     if(m_operator) m_operator->ready();
 }
