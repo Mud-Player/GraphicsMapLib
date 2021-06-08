@@ -13,6 +13,7 @@ class GraphicsMapThread;
  * \brief 基于Graphics View的地图
  * \details 其仅用于显示瓦片地图，要实现地图以外的功能可以继承该类
  * \note 鼠标拖拽地图可通过setDragMode(QGraphicsView::ScrollHandDrag)实现
+ * \bug QGraphicsView::centerOn函数会造成1个像素的抖动问题，参见源码https://github.com/qt/qtbase/blob/5.12.8/src/widgets/graphicsview/qgraphicsview.cpp 1936行
  */
 class GRAPHICSMAPLIB_EXPORT GraphicsMap : public QGraphicsView
 {

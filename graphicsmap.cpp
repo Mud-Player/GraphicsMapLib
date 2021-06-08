@@ -160,16 +160,16 @@ void GraphicsMap::init()
     }, Qt::QueuedConnection);
     // TODO: We have to use Qt::QueuedConnection, if not, we will see the map twinkle when scale
     connect(this->horizontalScrollBar(), &QScrollBar::valueChanged, this, [&](){
-    if(m_isloading)
-        m_hasPendingLoad = true;
-    else
-        updateTile();
+        if(m_isloading)
+            m_hasPendingLoad = true;
+        else
+            updateTile();
     }, Qt::QueuedConnection);
     connect(this->verticalScrollBar(), &QScrollBar::valueChanged, this, [&](){
-    if(m_isloading)
-        m_hasPendingLoad = true;
-    else
-        updateTile();
+        if(m_isloading)
+            m_hasPendingLoad = true;
+        else
+            updateTile();
     }, Qt::QueuedConnection);
 }
 
@@ -306,9 +306,9 @@ void GraphicsMapThread::requestTile(const GraphicsMap::TileSpec &topLeft, const 
 /// \note 该槽函数应该在多线程通过队列调用,以免多线程正在进行上一次资源路径的加载操作
 void GraphicsMapThread::requestPath(const QString &path)
 {
-   if(path == m_path)
-       return;
-   m_path = path;
+    if(path == m_path)
+        return;
+    m_path = path;
 }
 
 void GraphicsMapThread::setTileCacheCount(const int &count)
