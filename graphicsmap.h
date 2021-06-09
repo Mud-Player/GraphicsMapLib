@@ -47,6 +47,10 @@ public:
     /// 设置缩放等级
     void setZoomLevel(const float &zoom);
     const float &zoomLevel() const;
+    /// 设置朝向，正北为起始，向右为正，向左为负
+    void setRotation(const qreal &degree);
+    /// 获取当前转向
+    const qreal &rotation() const;
     /// 设置瓦片缓存数量
     void setTileCacheCount(const int &count);
     /// 设置是否反转Y轴瓦片编号(标准下载的瓦片Y轴编号都是自上而下增加，不过某些情况可能是反的)
@@ -89,11 +93,12 @@ private:
     GraphicsMap::TileSpec m_preTopLeft;
     GraphicsMap::TileSpec m_preBottomRight;
     //
-    bool  m_isloading;
-    bool  m_hasPendingLoad;
-    float m_zoom;
-    float m_minZoom;
-    float m_maxZoom;
+    bool  m_isloading;          ///< 正在加载地图
+    bool  m_hasPendingLoad;     ///< 是否有挂起的加载请求
+    float m_zoom;               ///< 当前层级
+    float m_minZoom;            ///< 最小缩放层级，刚好适应窗口大小
+    float m_maxZoom;            ///< 最大缩放层级，防止无限放大
+    qreal m_rotate;             ///< 旋转角度
 };
 
 inline uint qHash(const GraphicsMap::TileSpec &key, uint seed)

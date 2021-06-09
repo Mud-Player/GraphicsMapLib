@@ -55,7 +55,7 @@ void GraphicsMap::setZoomLevel(const float &zoom)
     m_zoom = qBound(m_minZoom, zoom, m_maxZoom);
     auto zoomLevelDiff = m_zoom - ZOOM_BASE;
     auto scaleValue = qPow(2, zoomLevelDiff);
-    setTransform(QTransform::fromScale(scaleValue, scaleValue));
+    this->setTransform(QTransform::fromScale(scaleValue, scaleValue).rotate(m_rotate));
     //
     if(m_isloading)
         m_hasPendingLoad = true;
@@ -67,6 +67,15 @@ void GraphicsMap::setZoomLevel(const float &zoom)
 const float &GraphicsMap::zoomLevel() const
 {
     return m_zoom;
+}
+
+void GraphicsMap::setRotation(const qreal &degree)
+{
+    if(m_rotate == degree)
+        return;
+    this->rotate(degree - m_rotate);
+    m_rotate = degree;
+    updateTile();
 }
 
 void GraphicsMap::setTileCacheCount(const int &count)
