@@ -11,6 +11,7 @@ void qt_graphicsItem_highlightSelected(QGraphicsItem *item, QPainter *painter, c
 QSet<MapRangeRingItem*> MapRangeRingItem::m_items;
 
 MapRangeRingItem::MapRangeRingItem() :
+    m_cross(true),
     m_attachObj(nullptr)
 {
     m_pen.setWidth(2);
@@ -28,6 +29,11 @@ MapRangeRingItem::MapRangeRingItem() :
 MapRangeRingItem::~MapRangeRingItem()
 {
     m_items.remove(this);
+}
+
+void MapRangeRingItem::setCrossVisible(bool visible)
+{
+    m_cross = visible;
 }
 
 void MapRangeRingItem::setCoordinate(const QGeoCoordinate &coord)
@@ -51,12 +57,16 @@ void MapRangeRingItem::setRadius(const float &km)
 
 void MapRangeRingItem::attach(MapObjectItem *obj)
 {
-    if(m_attachObj)
+    if(m_attachObj) {
         disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapRangeRingItem::setCoordinate);
+        disconnect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapRangeRingItem::setRotationSlot);
+    }
     //
     m_attachObj = obj;
-    if(m_attachObj)
+    if(m_attachObj) {
         connect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapRangeRingItem::setCoordinate);
+        connect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapRangeRingItem::setRotationSlot);
+    }
 }
 
 void MapRangeRingItem::detach()
@@ -141,8 +151,8 @@ void MapRangeRingItem::drawEllipse(QPainter *painter, const float &radius)
     auto ry = center.ry()-top.ry();
     // draw the ellpise
     painter->drawEllipse({0, 0}, rx, ry);
-    // draw dial
-    if(m_radius == radius) {
+    // draw dial with cross-shaped
+    if(m_radius == radius && m_cross) {
         painter->save();
         auto pen = painter->pen();
         pen.setStyle(Qt::DashLine);
@@ -155,6 +165,11 @@ void MapRangeRingItem::drawEllipse(QPainter *painter, const float &radius)
     auto textCoord = m_coord.atDistanceAndAzimuth(radius * 1e3, 45);
     auto textPos = GraphicsMap::toScene(textCoord);
     painter->drawText(textPos-center, QString::number(radius, 10, 1)+"Km");
+}
+
+void MapRangeRingItem::setRotationSlot(const qreal &degree)
+{
+    this->setRotation(degree);
 }
 
 void qt_graphicsItem_highlightSelected(QGraphicsItem *item, QPainter *painter, const QStyleOptionGraphicsItem *option)

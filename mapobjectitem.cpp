@@ -56,6 +56,7 @@ QSet<MapObjectItem*> MapObjectItem::m_items;
 MapObjectItem::MapObjectItem()
 {
     this->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+    this->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     this->setTransformationMode(Qt::SmoothTransformation);
     setIcon(QString());
     //
@@ -114,4 +115,11 @@ void MapObjectItem::setColor(const QColor &color, qreal strength)
 const QSet<MapObjectItem *> &MapObjectItem::items()
 {
     return m_items;
+}
+
+QVariant MapObjectItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+   if(change == ItemRotationHasChanged)
+       emit rotationChanged(this->rotation());
+   return QGraphicsPixmapItem::itemChange(change, value);
 }

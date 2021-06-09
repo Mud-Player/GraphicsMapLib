@@ -21,6 +21,8 @@ class GRAPHICSMAPLIB_EXPORT MapRangeRingItem : public QObject, public QGraphicsI
 public:
     explicit MapRangeRingItem();
     ~MapRangeRingItem();
+    /// 设置是否显示十字架
+    void setCrossVisible(bool visible);
     /// 设置位置
     void setCoordinate(const QGeoCoordinate &coord);
     /// 设置半径
@@ -49,12 +51,15 @@ public:
 private:
     void updateBoundingRect();
     void drawEllipse(QPainter *painter, const float &radius);
+    ///  QGraphicsItem的setRotation不能被信号槽连接，故间接调用该接口
+    void setRotationSlot(const qreal &degree);
 
 private:
     static QSet<MapRangeRingItem*> m_items;         ///< 所有实例
 private:
     QPen   m_pen;
     QFont  m_font;
+    bool   m_cross;
     //
     QGeoCoordinate m_coord;
     float          m_radius;

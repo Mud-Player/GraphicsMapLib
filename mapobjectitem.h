@@ -31,6 +31,11 @@ public:
 
 signals:
     void coordinateChanged(const QGeoCoordinate &coord);
+    void rotationChanged(const qreal &degree);
+
+protected:
+    /// 获取rotation信号
+    virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
 
 private:
     static QSet<MapObjectItem*> m_items;         ///< 所有实例

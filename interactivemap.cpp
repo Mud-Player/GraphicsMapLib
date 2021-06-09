@@ -21,6 +21,7 @@ MapEllipseItem *InteractiveMap::addMapEllipse(int id)
         delete m_ellipseHash.take(id);
     auto item = new MapEllipseItem;
     m_ellipseHash.insert(id, item);
+    scene()->addItem(item);
     return item;
 }
 
@@ -29,6 +30,7 @@ void InteractiveMap::addMapEllipse(int id, MapEllipseItem *item)
     if(m_ellipseHash.contains(id))
         delete m_ellipseHash.take(id);
     m_ellipseHash.insert(id, item);
+    scene()->addItem(item);
 }
 
 bool InteractiveMap::removeMapEllipse(int id)
@@ -52,6 +54,7 @@ MapObjectItem *InteractiveMap::addMapObject(int id)
         delete m_objectHash.take(id);
     auto item = new MapObjectItem;
     m_objectHash.insert(id, item);
+    scene()->addItem(item);
     return item;
 }
 
@@ -60,6 +63,7 @@ void InteractiveMap::addMapObject(int id, MapObjectItem *item)
     if(m_objectHash.contains(id))
         delete m_objectHash.take(id);
     m_objectHash.insert(id, item);
+    scene()->addItem(item);
 }
 
 MapObjectItem *InteractiveMap::getMapObject(int id)
@@ -88,6 +92,7 @@ MapPolygonItem *InteractiveMap::addMapPolygon(int id)
         delete m_polygonHash.take(id);
     auto item = new MapPolygonItem;
     m_polygonHash.insert(id, item);
+    scene()->addItem(item);
     return item;
 }
 
@@ -96,6 +101,7 @@ void InteractiveMap::addMapPolygon(int id, MapPolygonItem *item)
     if(m_polygonHash.contains(id))
         delete m_polygonHash.take(id);
     m_polygonHash.insert(id, item);
+    scene()->addItem(item);
 }
 
 MapPolygonItem *InteractiveMap::getMapPolygon(int id)
@@ -124,6 +130,7 @@ MapRangeRingItem *InteractiveMap::addMapRangeRing(int id)
         delete m_rangeRingHash.take(id);
     auto item = new MapRangeRingItem;
     m_rangeRingHash.insert(id, item);
+    scene()->addItem(item);
     return item;
 }
 
@@ -132,6 +139,7 @@ void InteractiveMap::addMapRangeRing(int id, MapRangeRingItem *item)
     if(m_rangeRingHash.contains(id))
         delete m_rangeRingHash.take(id);
     m_rangeRingHash.insert(id, item);
+    scene()->addItem(item);
 }
 
 MapRangeRingItem *InteractiveMap::getMapRangeRing(int id)
@@ -160,6 +168,7 @@ MapRouteItem *InteractiveMap::addMapRoute(int id)
         delete m_routeHash.take(id);
     auto item = new MapRouteItem;
     m_routeHash.insert(id, item);
+    scene()->addItem(item);
     return item;
 }
 
@@ -168,6 +177,7 @@ void InteractiveMap::addMapRoute(int id, MapRouteItem *item)
     if(m_routeHash.contains(id))
         delete m_routeHash.take(id);
     m_routeHash.insert(id, item);
+    scene()->addItem(item);
 }
 
 MapRouteItem *InteractiveMap::getMapRoute(int id)
@@ -196,6 +206,7 @@ MapTrailItem *InteractiveMap::addMapTrail(int id)
         delete m_trailHash.take(id);
     auto item = new MapTrailItem;
     m_trailHash.insert(id, item);
+    scene()->addItem(item);
     return item;
 }
 
@@ -204,6 +215,7 @@ void InteractiveMap::addMapTrail(int id, MapTrailItem *item)
     if(m_trailHash.contains(id))
         delete m_trailHash.take(id);
     m_trailHash.insert(id, item);
+    scene()->addItem(item);
 }
 
 MapTrailItem *InteractiveMap::getMapTrail(int id)
