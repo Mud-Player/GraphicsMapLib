@@ -205,17 +205,11 @@ void GraphicsMap::updateTile()
     TileSpec origin{m_type, intZoom, static_cast<quint32>(xOrigin), static_cast<quint32>(yOrigin)};
     TileRegion region{origin, m_rotation, static_cast<quint8>(horCount+2), static_cast<quint8>(verCount+2)};
     //
-    if(m_tileRegion == region)
+    if(m_tileRegion == region || xOrigin < 0 || xOrigin >= tileCount)
         return;
     m_tileRegion = region;
     m_isloading = true;
     emit tileRequested(m_tileRegion);
-
-    // DEBUG
-    if(xOrigin < 0 || xOrigin >= tileCount) {
-        qWarning()<< "Error:" << __func__;
-    }
-    // END
 }
 
 GraphicsMapThread::TileCacheNode::~TileCacheNode()

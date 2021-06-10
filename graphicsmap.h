@@ -57,7 +57,7 @@ public:
     /// 设置缩放等级
     void setZoomLevel(const float &zoom);
     const float &zoomLevel() const;
-    /// 设置朝向，正北为起始，向右为正，向左为负
+    /// 设置朝向，正北为起始，向右为正，向左为负 \bug 由于QGraphicsView滚动条精度问题，会造成中心点抖动
     void setRotation(const qreal &degree);
     /// 获取当前朝向
     const qreal &rotation() const;
