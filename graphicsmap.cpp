@@ -14,7 +14,7 @@
 #define TILE_LEN 256  ///< 瓦片长度，标准的都是256 * 256
 #define SCENE_LEN ((1<<ZOOM_BASE) * TILE_LEN)   ///< 存放瓦片的场景大小
 
-QStringList GraphicsMap::m_mapTypes;
+QStringList GraphicsMap::m_mapTypes;    ///< 地图资源类型
 
 GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView(scene, parent),
     m_type(0),
@@ -22,9 +22,11 @@ GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView
     m_hasPendingLoad(false),
     m_zoom(1),
     m_minZoom(1),
-    m_maxZoom(20)
+    m_maxZoom(20),
+    m_rotation(0)
 {
     qRegisterMetaType<GraphicsMap::TileSpec>("GraphicsMap::TileSpec");
+    qRegisterMetaType<GraphicsMap::TileRegion>("GraphicsMap::TileRegion");
 
     init();
     //
@@ -55,7 +57,7 @@ void GraphicsMap::setZoomLevel(const float &zoom)
     m_zoom = qBound(m_minZoom, zoom, m_maxZoom);
     auto zoomLevelDiff = m_zoom - ZOOM_BASE;
     auto scaleValue = qPow(2, zoomLevelDiff);
-    this->setTransform(QTransform::fromScale(scaleValue, scaleValue).rotate(m_rotate));
+    this->setTransform(QTransform::fromScale(scaleValue, scaleValue).rotate(-m_rotation));
     //
     if(m_isloading)
         m_hasPendingLoad = true;
@@ -71,10 +73,12 @@ const float &GraphicsMap::zoomLevel() const
 
 void GraphicsMap::setRotation(const qreal &degree)
 {
-    if(m_rotate == degree)
+    if(m_rotation == degree)
         return;
-    this->rotate(degree - m_rotate);
-    m_rotate = degree;
+    // NOTE: as for rotate function, QGraphicsView process it for QGraphicsScene, here we need to revert it.
+    // if set to 10 degree, actually we need to make sure the north 10 degreen is y axis forword from screen
+    this->rotate(m_rotation - degree);
+    m_rotation = degree;
     updateTile();
 }
 
@@ -188,23 +192,30 @@ void GraphicsMap::updateTile()
     //
     qint32 tileCount = qPow(2, intZoom);
     auto topLeftPos = mapToScene(viewport()->geometry().topLeft());
-    auto bottomRightPos = mapToScene(viewport()->geometry().bottomRight());
-    qint32 xBegin = (topLeftPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount - 1;
-    qint32 yBegin = (topLeftPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount - 1;
-    qint32 xEnd = (bottomRightPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount + 1;
-    qint32 yEnd = (bottomRightPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount + 1;
-    if(xBegin < 0) xBegin = 0;
-    if(yBegin < 0) yBegin = 0;
-    if(xEnd >= tileCount) xEnd = tileCount - 1;
-    if(yEnd >= tileCount) yEnd = tileCount - 1;
-    TileSpec topLeft{m_type, intZoom, static_cast<quint32>(xBegin), static_cast<quint32>(yBegin)};
-    TileSpec bottomRight{m_type, intZoom, static_cast<quint32>(xEnd), static_cast<quint32>(yEnd)};
-    if(m_preTopLeft == topLeft && m_preBottomRight == bottomRight)
+    auto topRightPos = mapToScene(viewport()->geometry().topRight());
+    auto bottomLeftPos = mapToScene(viewport()->geometry().bottomLeft());
+    qint32 xOrigin = (topLeftPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount;
+    qint32 yOrigin = (topLeftPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount;
+    qint32 xHor = (topRightPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount;
+    qint32 yHor = (topRightPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount;
+    qint32 xVer = (bottomLeftPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount;
+    qint32 yVer = (bottomLeftPos.y()+SCENE_LEN/2) / SCENE_LEN * tileCount;
+    auto horCount = QVector2D(xOrigin, yOrigin).distanceToPoint(QVector2D(xHor, yHor));
+    auto verCount = QVector2D(xOrigin, yOrigin).distanceToPoint(QVector2D(xVer, yVer));
+    TileSpec origin{m_type, intZoom, static_cast<quint32>(xOrigin), static_cast<quint32>(yOrigin)};
+    TileRegion region{origin, m_rotation, static_cast<quint8>(horCount+2), static_cast<quint8>(verCount+2)};
+    //
+    if(m_tileRegion == region)
         return;
-    m_preTopLeft = topLeft;
-    m_preBottomRight = bottomRight;
+    m_tileRegion = region;
     m_isloading = true;
-    emit tileRequested(topLeft, bottomRight);
+    emit tileRequested(m_tileRegion);
+
+    // DEBUG
+    if(xOrigin < 0 || xOrigin >= tileCount) {
+        qWarning()<< "Error:" << __func__;
+    }
+    // END
 }
 
 GraphicsMapThread::TileCacheNode::~TileCacheNode()
@@ -212,9 +223,7 @@ GraphicsMapThread::TileCacheNode::~TileCacheNode()
     delete value;
 }
 
-GraphicsMapThread::GraphicsMapThread() :
-    m_preTopLeft({0, 0, 0, 0}),
-    m_preBottomRight({0, 0, 0, 0}),
+GraphicsMapThread::GraphicsMapThread():
     m_yInverted(false)
 {
     m_tileCache.setMaxCost(1000);
@@ -232,8 +241,7 @@ GraphicsMapThread::~GraphicsMapThread()
     delete this->thread();
 }
 
-
-void GraphicsMapThread::requestTile(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight)
+void GraphicsMapThread::requestTile(const GraphicsMap::TileRegion &region)
 {
     // hide all tile items if tile resource path is invalid
     if(m_path.isEmpty()) {
@@ -244,42 +252,31 @@ void GraphicsMapThread::requestTile(const GraphicsMap::TileSpec &topLeft, const 
         return;
     }
     // just ignore the requeset if rect arec not changed
-    if(m_preTopLeft == topLeft && m_preBottomRight == bottomRight) {
+    if(m_tileRegion == region) {
         emit requestFinished();
         return;
     }
 
-    // y向下递增
-    QSet<GraphicsMap::TileSpec> curViewSet;
-    QSet<GraphicsMap::TileSpec> preViewSet;
-    const auto &type = topLeft.type;
-    {
-        const auto &zoom = topLeft.zoom;
-        const auto xBegin = topLeft.x;
-        const auto xEnd = bottomRight.x;
-        const auto yBegin = topLeft.y;
-        const auto yEnd = bottomRight.y;
-        for(auto x = xBegin; x <= xEnd; ++x) {
-            for(auto y = yBegin; y <= yEnd; ++y) {
-                curViewSet.insert({type, zoom, x, y});
-            }
-        }
-    }
-    {
-        const auto &zoom = m_preTopLeft.zoom;
-        const auto xBegin = m_preTopLeft.x;
-        const auto xEnd = m_preBottomRight.x;
-        const auto yBegin = m_preTopLeft.y;
-        const auto yEnd = m_preBottomRight.y;
-        for(auto x = xBegin; x <= xEnd; ++x) {
-            for(auto y = yBegin; y <= yEnd; ++y) {
-                preViewSet.insert({type, zoom, x, y});
-            }
-        }
-    }
+    //
+    m_tileRegion = region;
 
-    m_preTopLeft = topLeft;
-    m_preBottomRight = bottomRight;
+    // methoad： 将矩形区域视作从初始方向绕orgin为原点作旋转，然后求得所有瓦片编号新旋转后的坐标
+    QSet<GraphicsMap::TileSpec> curViewSet;
+    const auto &origin = region.origin;
+    const auto &type = origin.type;
+    const auto &zoom = origin.zoom;
+    {
+        QMatrix rotMat;
+        rotMat.rotate(region.rotation);
+        QRect boundRect = rotMat.mapRect(QRectF(0, 0, region.horCount, region.verCount)).toRect();
+//        boundRect.adjust(-1, -1, 0 ,0);
+        // noto: y向下递增
+        for(auto y = boundRect.x(); y <= boundRect.width(); ++y) {
+            for(auto x = boundRect.y(); x <= boundRect.height(); ++x) {
+                curViewSet.insert({type, zoom, origin.x + x, origin.y + y});
+            }
+        }
+    }
 
     // compute which to load and which to unload
     QSet<GraphicsMap::TileSpec> needToHideTileSet = m_tileTriedToShowdSet;

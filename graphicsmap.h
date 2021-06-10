@@ -39,6 +39,16 @@ public:
             return (qlonglong(type)<<52) | (qlonglong(zoom)<< 44) | (qlonglong(x)<< 22) | y;
         };
     };
+    /// 显示瓦片区域
+    struct TileRegion {
+        GraphicsMap::TileSpec origin;  ///< 起始瓦片
+        qreal   rotation;   ///< 旋转角度
+        quint8  horCount;   ///< 水平方向瓦片数量
+        quint8  verCount;   ///< 垂直方向瓦片数量
+        inline bool operator== (const TileRegion &rhs) const {
+            return origin == rhs.origin && rotation == rhs.rotation && horCount == rhs.horCount && verCount == rhs.verCount;
+        }
+    };
 
     GraphicsMap(QGraphicsScene *scene, QWidget *parent = nullptr);
     ~GraphicsMap();
@@ -49,7 +59,7 @@ public:
     const float &zoomLevel() const;
     /// 设置朝向，正北为起始，向右为正，向左为负
     void setRotation(const qreal &degree);
-    /// 获取当前转向
+    /// 获取当前朝向
     const qreal &rotation() const;
     /// 设置瓦片缓存数量
     void setTileCacheCount(const int &count);
@@ -73,7 +83,7 @@ public:
 
 signals:
     void zoomChanged(const float &zoom);
-    void tileRequested(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight);
+    void tileRequested(const TileRegion &region);
     void pathRequested(const QString &path);
 
 protected:
@@ -87,19 +97,20 @@ private:
     static QStringList m_mapTypes; ///< 资源路径类型
 private:
     GraphicsMapThread    *m_mapThread;
-    QSet<QGraphicsItem*> m_tiles;
+    QSet<QGraphicsItem*> m_tiles;          ///< 已显示瓦片
     quint8               m_type;           ///< 瓦片资源类型
     //
-    GraphicsMap::TileSpec m_preTopLeft;
-    GraphicsMap::TileSpec m_preBottomRight;
+    TileRegion m_tileRegion;    ///< 显示瓦片区域
     //
     bool  m_isloading;          ///< 正在加载地图
     bool  m_hasPendingLoad;     ///< 是否有挂起的加载请求
     float m_zoom;               ///< 当前层级
     float m_minZoom;            ///< 最小缩放层级，刚好适应窗口大小
     float m_maxZoom;            ///< 最大缩放层级，防止无限放大
-    qreal m_rotate;             ///< 旋转角度
+    qreal m_rotation;             ///< 旋转角度
 };
+Q_DECLARE_METATYPE(GraphicsMap::TileSpec);
+Q_DECLARE_METATYPE(GraphicsMap::TileRegion);
 
 inline uint qHash(const GraphicsMap::TileSpec &key, uint seed)
 {
@@ -129,7 +140,7 @@ public:
 
 public slots:
     /// 请求刷新瓦片区域
-    void requestTile(const GraphicsMap::TileSpec &topLeft, const GraphicsMap::TileSpec &bottomRight);
+    void requestTile(const GraphicsMap::TileRegion &region);
     /// 请求更改瓦片资源来源
     void requestPath(const QString &path);
 
@@ -156,8 +167,7 @@ private:
     QSet<GraphicsMap::TileSpec>    m_tileTriedToShowdSet;     ///<已尝试显示瓦片编号集合(上一次调用过showItem的所有瓦片，存在依赖关系的瓦片，实际上只有顶层才显示)
     QSet<GraphicsMap::TileSpec>    m_tileShowedSet;           ///<实际显示瓦片编号集合
     //
-    GraphicsMap::TileSpec m_preTopLeft;
-    GraphicsMap::TileSpec m_preBottomRight;
+    GraphicsMap::TileRegion m_tileRegion;    ///< 请求的瓦片区域
     //
     QString          m_path;
     bool             m_yInverted;
