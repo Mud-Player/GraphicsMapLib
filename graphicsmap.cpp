@@ -269,10 +269,11 @@ void GraphicsMapThread::requestTile(const GraphicsMap::TileRegion &region)
         QMatrix rotMat;
         rotMat.rotate(region.rotation);
         QRect boundRect = rotMat.mapRect(QRectF(0, 0, region.horCount, region.verCount)).toRect();
-//        boundRect.adjust(-1, -1, 0 ,0);
         // noto: y向下递增
-        for(auto y = boundRect.x(); y <= boundRect.width(); ++y) {
-            for(auto x = boundRect.y(); x <= boundRect.height(); ++x) {
+        const auto xMax = boundRect.x() + boundRect.width();
+        const auto yMax = boundRect.y() + boundRect.height();
+        for(auto y = boundRect.y(); y <= yMax; ++y) {
+            for(auto x = boundRect.x(); x <= xMax; ++x) {
                 curViewSet.insert({type, zoom, origin.x + x, origin.y + y});
             }
         }
