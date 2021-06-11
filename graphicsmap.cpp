@@ -43,6 +43,20 @@ GraphicsMap::~GraphicsMap()
     delete m_mapThread;
 }
 
+void GraphicsMap::setFrameRate(int fps)
+{
+    if(fps <= 0) {
+        this->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+        disconnect(&m_updateTimer, &QTimer::timeout, viewport(), QOverload<>::of(&QGraphicsView::update));
+        m_updateTimer.stop();
+    }
+    else {
+        this->setViewportUpdateMode(QGraphicsView::NoViewportUpdate);
+        connect(&m_updateTimer, &QTimer::timeout, viewport(), QOverload<>::of(&QGraphicsView::update), Qt::ConnectionType(Qt::DirectConnection|Qt::UniqueConnection));
+        m_updateTimer.start(1000/fps);
+    }
+}
+
 void GraphicsMap::setTilePath(const QString &path)
 {
     m_type = mapType(path);

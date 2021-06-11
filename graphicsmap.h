@@ -7,6 +7,7 @@
 #include <QWheelEvent>
 #include <QCache>
 #include <QGeoCoordinate>
+#include <QTimer>
 
 class GraphicsMapThread;
 /*!
@@ -52,6 +53,8 @@ public:
 
     GraphicsMap(QGraphicsScene *scene, QWidget *parent = nullptr);
     ~GraphicsMap();
+    /// 设置更新帧率，\param fps 地图定时刷新的帧率，0或者负值可切换为按需更新
+    void setFrameRate(int fps);
     /// 设置瓦片路径
     void setTilePath(const QString &path);
     /// 设置缩放等级
@@ -99,6 +102,7 @@ private:
     GraphicsMapThread    *m_mapThread;
     QSet<QGraphicsItem*> m_tiles;          ///< 已显示瓦片
     quint8               m_type;           ///< 瓦片资源类型
+    QTimer               m_updateTimer;    ///< 更新定时器
     //
     TileRegion m_tileRegion;    ///< 显示瓦片区域
     //
