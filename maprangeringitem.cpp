@@ -17,9 +17,8 @@ MapRangeRingItem::MapRangeRingItem() :
     m_attachObj(nullptr)
 {
     m_pen.setWidth(2);
-    m_pen.setColor(Qt::green);
     m_pen.setCosmetic(true);
-    m_pen.setColor(QColor::fromRgb(100, 190, 181));
+    m_pen.setColor(QColor::fromRgb(118, 215, 196));
     m_font.setFamily("Microsoft YaHei");
     m_font.setPointSizeF(10);
     setCoordinate({0, 0});
@@ -52,7 +51,8 @@ void MapRangeRingItem::setRotation(const qreal &degree)
     if(m_rotation == degree)
         return;
     m_rotation = degree;
-    QGraphicsItem::setRotation(degree);
+    // 保持椭圆和方位刻度不变，然后在paint函数里面更新十字型和距离文字的位置
+    update();
 }
 
 void MapRangeRingItem::setRadius(const float &km)
@@ -127,13 +127,13 @@ void MapRangeRingItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     Q_UNUSED(widget)
     // radius of ellpise
     auto ellpiseRadius = [&](const float &radius) {
-        auto topCoord = m_coord.atDistanceAndAzimuth(radius * 1e3, m_rotation);
-        auto rightCoord = m_coord.atDistanceAndAzimuth(radius * 1e3, m_rotation + 90);
+        auto topCoord = m_coord.atDistanceAndAzimuth(radius * 1e3, 0);
+        auto rightCoord = m_coord.atDistanceAndAzimuth(radius * 1e3, 90);
         auto top = GraphicsMap::toScene(topCoord);
         auto right = GraphicsMap::toScene(rightCoord);
         auto center = this->pos();
-        auto rx = QVector2D(top - center).length();
-        auto ry = QVector2D(right - center).length();
+        auto rx = right.rx() - center.rx();
+        auto ry = center.ry() - top.ry();
         return QPointF(rx, ry);
     };
     //
@@ -142,11 +142,55 @@ void MapRangeRingItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     auto radius0 = ellpiseRadius(m_radius / 3);
     auto radius1 = ellpiseRadius(m_radius / 3 * 2);
     auto radius2 = ellpiseRadius(m_radius);
+    /*--------------- fixed ratation ----------------*/
     // 1.draw ellipse
     painter->drawEllipse({0, 0}, radius0.rx(), radius0.ry());
     painter->drawEllipse({0, 0}, radius1.rx(), radius1.ry());
     painter->drawEllipse({0, 0}, radius2.rx(), radius2.ry());
-    // 2.draw cross shape with a ligter color
+
+    // 2.draw dial with azimuth
+    painter->save();
+    QFontMetricsF fontMetrix(m_font);
+    auto textRect = fontMetrix.boundingRect("N");
+    for(int i = 0; i < 12; ++i) {
+        int az = i * 30;
+        QString number;
+        switch (az) {
+        case 30:
+        case 60:
+        case 120:
+        case 150:
+        case 210:
+        case 240:
+        case 300:
+        case 330:
+            number = QString::number(az);
+            break;
+        case 0:
+            number = "N";
+            break;
+        case 90:
+            number = "E";
+            break;
+        case 180:
+            number = "S";
+            break;
+        case 270:
+            number = "W";
+            break;
+        }
+        textRect = fontMetrix.boundingRect(number);
+        painter->drawLine(0.0, -radius2.ry(), 0.0, -radius2.ry()*0.98);
+        painter->drawText(-textRect.width()/2, -radius2.y() + textRect.height(), number);
+        painter->rotate(30);
+    }
+    painter->restore();
+
+    /*--------------- mutable ratation ----------------*/
+    // 3.draw cross shape with a ligter color
+    // Painter Begin
+    painter->save();
+    painter->rotate(m_rotation);
     if(m_cross) {
         painter->save();
         auto pen = painter->pen();
@@ -160,25 +204,15 @@ void MapRangeRingItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     auto pen = painter->pen();
     pen.setColor(pen.color().lighter(130));
     painter->setPen(pen);
-    // 3.draw dial with azimuth
-    painter->save();
-    QFontMetricsF fontMetrix(m_font);
-    auto textRect = fontMetrix.boundingRect("N");
-    painter->drawText(-textRect.width()/2, -radius2.y() + textRect.height(), "N");
-    painter->rotate(90);
-    textRect = fontMetrix.boundingRect("E");
-    painter->drawText(-textRect.width()/2, -radius2.y() + textRect.height(), "E");
-    painter->rotate(90);
-    textRect = fontMetrix.boundingRect("S");
-    painter->drawText(-textRect.width()/2, -radius2.y() + textRect.height(), "S");
-    painter->rotate(90);
-    textRect = fontMetrix.boundingRect("W");
-    painter->drawText(-textRect.width()/2, -radius2.y() + textRect.height(), "W");
-    painter->restore();
+
     // 4.draw distance text
-    painter->drawText(radius0.rx(), 0,  QString::number(m_radius/3)+"Km");
-    painter->drawText(radius1.rx(), 0,  QString::number(m_radius/3*2)+"Km");
-    painter->drawText(radius2.rx(), 0,  QString::number(m_radius)+"Km");
+    painter->rotate(45);
+    painter->drawText(0, -radius0.ry(),  QString::number(m_radius/3)+"Km");
+    painter->drawText(0, -radius1.ry(),  QString::number(m_radius/3*2)+"Km");
+    painter->drawText(0, -radius2.ry(),  QString::number(m_radius)+"Km");
+    painter->rotate(-45);
+    // Painter End
+    painter->restore();
 
     // copied from qt source
     if (option->state & QStyle::State_Selected)
@@ -194,12 +228,11 @@ void MapRangeRingItem::updateBoundingRect()
     auto top = GraphicsMap::toScene(topCoord);
     auto right = GraphicsMap::toScene(rightCoord);
     auto center = this->pos();
-    auto rx = right.rx() - center.x();
-    auto ry = center.y() - top.ry();
+    auto rx = right.rx() - center.rx();
+    auto ry = center.ry() - top.ry();
     m_boundRect.adjust(-rx, -ry, rx, ry);
     m_boundRect.adjust(-halfpw, -halfpw, halfpw, halfpw);
 }
-
 
 void qt_graphicsItem_highlightSelected(QGraphicsItem *item, QPainter *painter, const QStyleOptionGraphicsItem *option)
 {

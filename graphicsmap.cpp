@@ -27,6 +27,7 @@ GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView
 {
     qRegisterMetaType<GraphicsMap::TileSpec>("GraphicsMap::TileSpec");
     qRegisterMetaType<GraphicsMap::TileRegion>("GraphicsMap::TileRegion");
+    viewport()->setObjectName("Map");
 
     init();
     //
@@ -47,12 +48,12 @@ void GraphicsMap::setFrameRate(int fps)
 {
     if(fps <= 0) {
         this->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
-        disconnect(&m_updateTimer, &QTimer::timeout, viewport(), QOverload<>::of(&QGraphicsView::update));
+        disconnect(&m_updateTimer, &QTimer::timeout, viewport(), qOverload<>(&QGraphicsView::update));
         m_updateTimer.stop();
     }
     else {
         this->setViewportUpdateMode(QGraphicsView::NoViewportUpdate);
-        connect(&m_updateTimer, &QTimer::timeout, viewport(), QOverload<>::of(&QGraphicsView::update), Qt::ConnectionType(Qt::DirectConnection|Qt::UniqueConnection));
+        connect(&m_updateTimer, &QTimer::timeout, viewport(), qOverload<>(&QGraphicsView::update), Qt::ConnectionType(Qt::DirectConnection|Qt::UniqueConnection));
         m_updateTimer.start(1000/fps);
     }
 }
