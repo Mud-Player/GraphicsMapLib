@@ -21,6 +21,7 @@ add_library(${PROJECT_NAME} SHARED
   maprouteitem.h
   maptrailitem.h
   mapobjectitem.h
+  mapoperator.h
   graphicsmap.cpp
   interactivemap.cpp
   mapellipseitem.cpp
@@ -29,6 +30,7 @@ add_library(${PROJECT_NAME} SHARED
   maprouteitem.cpp
   maptrailitem.cpp
   mapobjectitem.cpp
+  mapoperator.cpp
 )
 add_library(Lib::GraphicsMap ALIAS ${PROJECT_NAME})
 

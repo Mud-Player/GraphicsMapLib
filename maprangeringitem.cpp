@@ -214,7 +214,7 @@ void MapRangeRingItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     // Painter End
     painter->restore();
 
-    // copied from qt source
+    // copied from qt source (maybe not work for current)
     if (option->state & QStyle::State_Selected)
         qt_graphicsItem_highlightSelected(this, painter, option);
 }
