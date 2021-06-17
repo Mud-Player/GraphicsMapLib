@@ -128,9 +128,9 @@ const QVector<MapRoutePoint*> &MapRouteItem::setPoints(const QVector<MapRouteIte
     return m_ctrlItems;
 }
 
-const QVector<MapRoutePoint *> &MapRouteItem::points() const
+const QVector<MapRouteItem::Point> &MapRouteItem::points() const
 {
-    return m_ctrlItems;
+    return m_routePoints;
 }
 
 const QSet<MapRouteItem *> &MapRouteItem::items()

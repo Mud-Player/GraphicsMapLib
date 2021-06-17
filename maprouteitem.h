@@ -41,7 +41,7 @@ public:
     /// 设置航点
     const QVector<MapRoutePoint*> &setPoints(const QVector<Point> &points);
     /// 获取航点列表
-    const QVector<MapRoutePoint*> &points() const;
+    const QVector<Point> &points() const;
 
 public:
     /// 获取所有的实例
