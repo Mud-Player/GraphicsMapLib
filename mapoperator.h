@@ -106,9 +106,14 @@ class GRAPHICSMAPLIB_EXPORT MapRouteOperator : public InteractiveMapOperator
 
 public:
     MapRouteOperator(QObject *parent = nullptr);
+    /// 编辑已经创建的航路
+    void edit(MapRouteItem *item);
 
 signals:
+    ///< 创建信号
     void created(MapRouteItem *item);
+    ///< 结束编辑信号
+    void finished();
 
 protected:
     virtual void ready() override;

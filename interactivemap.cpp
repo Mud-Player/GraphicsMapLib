@@ -245,10 +245,13 @@ void InteractiveMap::setOperator(InteractiveMapOperator *op)
     // process end funtion with previos operator
     if(m_operator)
         m_operator->end();
-    //
-    op->setScene(this->scene());
-    op->setMap(this);
+
     m_operator = op;
+    if(!m_operator)
+        return;
+    //
+    m_operator->setScene(this->scene());
+    m_operator->setMap(this);
     // process ready funtion with newlly operator
     op->ready();
 }

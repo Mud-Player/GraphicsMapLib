@@ -151,7 +151,9 @@ bool MapRouteItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
         int index = m_ctrlItems.indexOf(ctrlPoint);
         // update the point data
         auto point = m_routePoints.at(index);
+        auto alt = point.coord.altitude();
         point.coord = GraphicsMap::toCoordinate(ctrlPoint->pos());
+        point.coord.setAltitude(alt);
         m_routePoints.replace(index, point);
         // update the polyline
         updatePolylineAndText(-1, -1);  // negative value means than only polyline will be updated

@@ -244,6 +244,14 @@ MapRouteOperator::MapRouteOperator(QObject *parent) : InteractiveMapOperator(par
 {
 }
 
+void MapRouteOperator::edit(MapRouteItem *item)
+{
+    if(m_route)
+        m_route->setEditable(false);
+    m_route = item;
+    m_route->setEditable(true);
+}
+
 void MapRouteOperator::ready()
 {
     m_route = nullptr;
@@ -295,6 +303,7 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
         if(m_route)
             m_route->setEditable(false);
         m_route = nullptr;
+        emit finished();
         return false;
     }
     // do nothing
@@ -302,6 +311,7 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
         return false;
     // create begin or append
     auto coord = m_map->toCoordinate(event->pos());
+    coord.setAltitude(0);
     if(!m_route) { // create route
         m_route = new MapRouteItem;
         m_scene->addItem(m_route);
