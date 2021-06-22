@@ -55,6 +55,12 @@ QSet<MapObjectItem*> MapObjectItem::m_items;
 
 MapObjectItem::MapObjectItem()
 {
+    auto font = m_text.font();
+    font.setFamily("Microsoft YaHei");
+    m_text.setFont(font);
+    m_text.setBrush(Qt::black);
+    m_text.setParentItem(this);
+    //
     this->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
     this->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     this->setTransformationMode(Qt::SmoothTransformation);
@@ -95,10 +101,12 @@ void MapObjectItem::setIcon(const QString &url)
     setOffset(-boundRect.center());
 }
 
-void MapObjectItem::setColor(const QColor &color, qreal strength)
+void MapObjectItem::setIconColor(const QColor &color, qreal strength)
 {
     // We should to unset previous color
     if(!color.isValid()) {
+        if(graphicsEffect())
+            delete graphicsEffect();
         this->setGraphicsEffect(nullptr);
         return;
     }
@@ -112,6 +120,43 @@ void MapObjectItem::setColor(const QColor &color, qreal strength)
     effect->setStrength(strength);
 }
 
+void MapObjectItem::setText(const QString &text, Qt::Alignment align)
+{
+    m_text.setText(text);
+    auto iconBound = this->boundingRect();
+    auto textBound = m_text.boundingRect();
+    QPointF pos;
+    if(align & Qt::AlignLeft) {
+        pos.setX(-iconBound.center().x() - textBound.x());
+    }
+    else if(align & Qt::AlignHCenter) {
+        pos.setX(-textBound.center().x());
+    }
+    else if(align % Qt::AlignRight) {
+        pos.setX(iconBound.center().x());
+    }
+    if(align & Qt::AlignTop) {
+        pos.setY(-iconBound.center().y());
+    }
+    else if(align & Qt::AlignVCenter) {
+        pos.setY(-iconBound.center().y() - textBound.y());
+    }
+    else if(align & Qt::AlignBottom) {
+        pos.setY(iconBound.center().y());
+    }
+    m_text.setPos(pos);
+}
+
+void MapObjectItem::setTextColor(const QColor &color)
+{
+
+}
+
+void MapObjectItem::setMovable(bool movable)
+{
+
+}
+
 const QSet<MapObjectItem *> &MapObjectItem::items()
 {
     return m_items;
@@ -119,7 +164,12 @@ const QSet<MapObjectItem *> &MapObjectItem::items()
 
 QVariant MapObjectItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
 {
-   if(change == ItemRotationHasChanged)
+   if(change == ItemRotationHasChanged) {
        emit rotationChanged(this->rotation());
+   }
+   else if(change == ItemPositionHasChanged) {
+       m_coord = GraphicsMap::toCoordinate(value.toPointF());
+       emit coordinateChanged(m_coord);
+   }
    return QGraphicsPixmapItem::itemChange(change, value);
 }

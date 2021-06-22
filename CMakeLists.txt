@@ -12,27 +12,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 add_library(${PROJECT_NAME} SHARED
-  GraphicsMapLib_global.h
-  graphicsmap.h
-  interactivemap.h
-  mapellipseitem.h
-  mappolygonitem.h
-  maprangeringitem.h
-  maprouteitem.h
-  maptrailitem.h
-  mapobjectitem.h
-  mapoperator.h
-  mappieitem.h
+  Resources.qrc
   graphicsmap.cpp
+  graphicsmap.h
   interactivemap.cpp
+  interactivemap.h
   mapellipseitem.cpp
-  mappolygonitem.cpp
-  maprangeringitem.cpp
-  maprouteitem.cpp
-  maptrailitem.cpp
+  mapellipseitem.h
   mapobjectitem.cpp
+  mapobjectitem.h
   mapoperator.cpp
+  mapoperator.h
   mappieitem.cpp
+  mappieitem.h
+  mappolygonitem.cpp
+  mappolygonitem.h
+  maprangeringitem.cpp
+  maprangeringitem.h
+  maprouteitem.cpp
+  maprouteitem.h
+  maptrailitem.cpp
+  maptrailitem.h
 )
 add_library(Lib::GraphicsMap ALIAS ${PROJECT_NAME})
 

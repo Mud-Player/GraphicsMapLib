@@ -1,12 +1,14 @@
 ﻿#include "maprouteitem.h"
 #include "graphicsmap.h"
+#include "mapobjectitem.h"
 
 QSet<MapRouteItem*> MapRouteItem::m_items;
 
 MapRouteItem::MapRouteItem() :
     m_editable(true),
     m_sceneAdded(false),
-    m_autoNumber(true)
+    m_autoNumber(true),
+    m_checkedIndex(-1)
 {
     qRegisterMetaType<MapRouteItem::Point>("MapRouteItem::Point");
     //
@@ -36,8 +38,7 @@ void MapRouteItem::setEditable(const bool &editable)
     pen.setColor(m_editable ? Qt::white : Qt::lightGray);
     this->setPen(pen);
     for(auto &ctrlPoint : m_ctrlItems) {
-        ctrlPoint->setFlag(QGraphicsItem::ItemIsMovable, editable);
-        ctrlPoint->setCursor(editable ? Qt::DragMoveCursor : Qt::ArrowCursor);
+        ctrlPoint->setMovable(editable);
     }
 }
 
@@ -46,13 +47,31 @@ void MapRouteItem::setAutoNumber(bool on)
     m_autoNumber = on;
 }
 
-MapRoutePoint* MapRouteItem::append(const MapRouteItem::Point &point)
+void MapRouteItem::setChecked(int index)
+{
+    if(m_checkedIndex == index)
+        return;
+//    auto prePoint = m_ctrlItems.value(m_checkedIndex);
+//    if(prePoint)
+//        prePoint->setChecked(false);
+//    auto curPoint = m_ctrlItems.value(index);
+//    if(curPoint)
+//        curPoint->setChecked(true);
+    m_checkedIndex = index;
+}
+
+int MapRouteItem::checked() const
+{
+    return m_checkedIndex;
+}
+
+MapObjectItem* MapRouteItem::append(const MapRouteItem::Point &point)
 {
     auto ctrlPoint = createPoint();
     m_routePoints.append(point);
     m_ctrlItems.append(ctrlPoint);
     // update point item pos
-    ctrlPoint->setPos(GraphicsMap::toScene(point.coord));
+    ctrlPoint->setCoordinate(point.coord);
     //
     updatePolylineAndText(m_routePoints.size()-1, m_routePoints.size()-1);
     //
@@ -60,13 +79,13 @@ MapRoutePoint* MapRouteItem::append(const MapRouteItem::Point &point)
     return ctrlPoint;
 }
 
-MapRoutePoint *MapRouteItem::insert(const int &index, const MapRouteItem::Point &point)
+MapObjectItem *MapRouteItem::insert(const int &index, const MapRouteItem::Point &point)
 {
     auto ctrlPoint = createPoint();
     m_routePoints.insert(index, point);
     m_ctrlItems.insert(index, ctrlPoint);
     // update point item pos
-    ctrlPoint->setPos(GraphicsMap::toScene(point.coord));
+    ctrlPoint->setCoordinate(point.coord);
     //
     updatePolylineAndText(index, m_routePoints.size()-1);
     //
@@ -74,7 +93,7 @@ MapRoutePoint *MapRouteItem::insert(const int &index, const MapRouteItem::Point 
     return ctrlPoint;
 }
 
-MapRoutePoint *MapRouteItem::replace(const int &index, const MapRouteItem::Point &point)
+MapObjectItem *MapRouteItem::replace(const int &index, const MapRouteItem::Point &point)
 {
     if(m_routePoints.value(index) == point)
         return m_ctrlItems.value(index);
@@ -83,7 +102,7 @@ MapRoutePoint *MapRouteItem::replace(const int &index, const MapRouteItem::Point
     m_routePoints.replace(index, point);
     // update point item pos
     auto ctrlPoint = m_ctrlItems.value(index);;
-    ctrlPoint->setPos(GraphicsMap::toScene(point.coord));
+    ctrlPoint->setCoordinate(point.coord);
     //
     updatePolylineAndText(index, index);
     //
@@ -103,7 +122,7 @@ void MapRouteItem::remove(const int &index)
     emit removed(index, coord);
 }
 
-const QVector<MapRoutePoint*> &MapRouteItem::setPoints(const QVector<MapRouteItem::Point> &points)
+const QVector<MapObjectItem*> &MapRouteItem::setPoints(const QVector<MapRouteItem::Point> &points)
 {
     if(points == m_routePoints)
         return m_ctrlItems;
@@ -119,7 +138,7 @@ const QVector<MapRoutePoint*> &MapRouteItem::setPoints(const QVector<MapRouteIte
     for(int i = 0; i < points.size(); ++i) {
         auto ctrlPoint = createPoint();
         m_ctrlItems.append(ctrlPoint);
-        ctrlPoint->setPos(GraphicsMap::toScene(points.at(i).coord));
+        ctrlPoint->setCoordinate(points.at(i).coord);
     }
     //
     updatePolylineAndText(0, m_routePoints.size()-1);
@@ -136,58 +155,6 @@ const QVector<MapRouteItem::Point> &MapRouteItem::points() const
 const QSet<MapRouteItem *> &MapRouteItem::items()
 {
     return m_items;
-}
-
-bool MapRouteItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
-{
-    if(!m_editable)
-        return false;
-    auto ctrlPoint = dynamic_cast<MapRoutePoint*>(watched);
-    switch (event->type()) {
-    case QEvent::GraphicsSceneMouseMove:
-    case QEvent::GraphicsSceneMouseRelease:
-    {
-        // get the index which respond to polygon edge point
-        int index = m_ctrlItems.indexOf(ctrlPoint);
-        // update the point data
-        auto point = m_routePoints.at(index);
-        auto alt = point.coord.altitude();
-        point.coord = GraphicsMap::toCoordinate(ctrlPoint->pos());
-        point.coord.setAltitude(alt);
-        m_routePoints.replace(index, point);
-        // update the polyline
-        updatePolylineAndText(-1, -1);  // negative value means than only polyline will be updated
-        //
-        emit updated(index, point);
-        break;
-    }
-    case QEvent::GraphicsSceneHoverEnter:
-    {
-        ctrlPoint->setBrush(Qt::white);
-        break;
-    }
-    case QEvent::GraphicsSceneHoverLeave:
-    {
-        ctrlPoint->setBrush(Qt::lightGray);
-        break;
-    }
-    default:
-        break;
-    }
-    return false;
-}
-
-QVariant MapRouteItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
-{
-   if(change != ItemSceneHasChanged)
-       return QGraphicsPathItem::itemChange(change, value);
-
-   m_sceneAdded = true;
-   for(auto ctrlPoint : m_ctrlItems) {
-       // control point's move event help us to move polygon point
-       ctrlPoint->installSceneEventFilter(this);
-   }
-   return QGraphicsPathItem::itemChange(change, value);
 }
 
 /// 更新QPainterPath的路径
@@ -213,38 +180,28 @@ void MapRouteItem::updatePolylineAndText(int beginIndex, int endIndex)
     }
 }
 
-MapRoutePoint *MapRouteItem::createPoint()
+void MapRouteItem::updateByPoint()
 {
-    auto ctrlPoint = new MapRoutePoint;
+    auto ctrlItem = dynamic_cast<MapObjectItem*>(sender());
+    auto index = m_ctrlItems.indexOf(ctrlItem);
+    auto point = m_routePoints.at(index);
+    auto alt = point.coord.altitude();
+    point.coord = GraphicsMap::toCoordinate(ctrlItem->pos());
+    point.coord.setAltitude(alt);
+    m_routePoints.replace(index, point);
+    // update the polyline
+    updatePolylineAndText(-1, -1);  // negative value means than only polyline will be updated
+    //
+    emit updated(index, point);
+}
+
+MapObjectItem *MapRouteItem::createPoint()
+{
+    auto ctrlPoint = new MapObjectItem;
     ctrlPoint->setParentItem(this);
-    ctrlPoint->setAcceptHoverEvents(true);
-    ctrlPoint->setFlag(QGraphicsItem::ItemIsMovable, m_editable);
+    ctrlPoint->setMovable(m_editable);
+    ctrlPoint->setIcon(":/Resources/dot.png");
     if(m_sceneAdded)
         ctrlPoint->installSceneEventFilter(this);
     return ctrlPoint;
-}
-
-MapRoutePoint::MapRoutePoint()
-{
-    this->setRect(-10, -10, 20, 20);
-    this->setPen(QPen(Qt::darkGray));
-    this->setBrush(Qt::lightGray);
-    this->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    //
-    auto font = m_text.font();
-    font.setFamily("Microsoft YaHei");
-    m_text.setFont(font);
-    m_text.setBrush(Qt::black);
-    m_text.setParentItem(this);
-}
-
-void MapRoutePoint::setText(const QString &text)
-{
-    m_text.setText(text);
-    m_text.setPos(-m_text.boundingRect().center());
-}
-
-void MapRoutePoint::setAnimation(bool on)
-{
-    Q_UNUSED(on)
 }
