@@ -246,10 +246,13 @@ MapRouteOperator::MapRouteOperator(QObject *parent) : InteractiveMapOperator(par
 
 void MapRouteOperator::edit(MapRouteItem *item)
 {
-    if(m_route)
+    if(m_route) {
         m_route->setEditable(false);
+        m_route->setCheckable(false);
+    }
     m_route = item;
     m_route->setEditable(true);
+    m_route->setCheckable(true);
 }
 
 void MapRouteOperator::ready()
@@ -270,7 +273,7 @@ bool MapRouteOperator::keyPressEvent(QKeyEvent *event)
     if(!m_route)
         return false;
     if(event->key() == Qt::Key_Backspace) {
-        m_route->remove(m_route->points().size()-1);
+        m_route->remove(m_route->checked());
     }
     return false;
 }
@@ -302,12 +305,13 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
         m_finishRequested = false;
         if(m_route)
             m_route->setEditable(false);
+            m_route->setCheckable(false);
         m_route = nullptr;
         emit finished();
         return false;
     }
     // do nothing
-    if(m_pressPos != event->pos())
+    if((m_pressPos-event->pos()).manhattanLength() > 3)
         return false;
     // create begin or append
     auto coord = m_map->toCoordinate(event->pos());

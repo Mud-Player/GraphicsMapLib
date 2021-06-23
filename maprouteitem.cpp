@@ -44,14 +44,15 @@ void MapRouteItem::setEditable(const bool &editable)
 
 void MapRouteItem::setCheckable(const bool &checkable)
 {
-    m_checkable = checkable;
-    if(!m_checkable)
+    // make sure call setChecked before operator=
+    if(!checkable)
         setChecked(-1);
+    m_checkable = checkable;
 }
 
 void MapRouteItem::setChecked(int index)
 {
-    if(m_checkedIndex == index)
+    if(m_checkedIndex == index || !m_checkable)
         return;
     auto prePoint = m_ctrlItems.value(m_checkedIndex);
     if(prePoint)
@@ -119,7 +120,7 @@ MapObjectItem *MapRouteItem::replace(const int &index, const MapRouteItem::Point
 
 void MapRouteItem::remove(const int &index)
 {
-    if(index >= m_routePoints.size()-1)
+    if(index <0 || index >= m_routePoints.size())
         return;
 
     auto coord = m_routePoints.takeAt(index);
