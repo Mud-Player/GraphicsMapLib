@@ -1,6 +1,7 @@
 ﻿#include "mapobjectitem.h"
 #include "graphicsmap.h"
 #include <QGraphicsColorizeEffect>
+#include <QGraphicsSceneEvent>
 #include <QDebug>
 
 /* XPM */
@@ -60,6 +61,9 @@ MapObjectItem::MapObjectItem()
     m_text.setFont(font);
     m_text.setBrush(Qt::black);
     m_text.setParentItem(this);
+    m_border.setPen(QPen(Qt::lightGray));
+    m_border.setVisible(false);
+    m_border.setParentItem(this);
     //
     this->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
     this->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
@@ -91,6 +95,7 @@ const QGeoCoordinate &MapObjectItem::coordinate() const
 
 void MapObjectItem::setIcon(const QString &url)
 {
+    this->setOffset(0, 0);
     this->setPixmap(url);
     // Reset to default icon
     if(pixmap().isNull()) {
@@ -105,8 +110,6 @@ void MapObjectItem::setIconColor(const QColor &color, qreal strength)
 {
     // We should to unset previous color
     if(!color.isValid()) {
-        if(graphicsEffect())
-            delete graphicsEffect();
         this->setGraphicsEffect(nullptr);
         return;
     }
@@ -125,36 +128,67 @@ void MapObjectItem::setText(const QString &text, Qt::Alignment align)
     m_text.setText(text);
     auto iconBound = this->boundingRect();
     auto textBound = m_text.boundingRect();
-    QPointF pos;
+    QPointF pos(-textBound.center());
     if(align & Qt::AlignLeft) {
-        pos.setX(-iconBound.center().x() - textBound.x());
+        pos.setX(-iconBound.width()/2 - textBound.center().x());
     }
     else if(align & Qt::AlignHCenter) {
         pos.setX(-textBound.center().x());
     }
-    else if(align % Qt::AlignRight) {
-        pos.setX(iconBound.center().x());
+    else if(align & Qt::AlignRight) {
+        pos.setX(iconBound.width()/2);
     }
     if(align & Qt::AlignTop) {
-        pos.setY(-iconBound.center().y());
+        pos.setY(-iconBound.height()/2 - textBound.height());
     }
     else if(align & Qt::AlignVCenter) {
-        pos.setY(-iconBound.center().y() - textBound.y());
+        pos.setY(-textBound.center().y());
     }
     else if(align & Qt::AlignBottom) {
-        pos.setY(iconBound.center().y());
+        pos.setY(iconBound.height()/2);
     }
     m_text.setPos(pos);
 }
 
 void MapObjectItem::setTextColor(const QColor &color)
 {
-
+    m_text.setPen(color);
 }
 
 void MapObjectItem::setMovable(bool movable)
 {
+    this->setFlag(QGraphicsItem::ItemIsMovable, movable);
+    this->setAcceptHoverEvents(movable);
+}
 
+void MapObjectItem::setClickable(bool clickable)
+{
+    m_clickable = clickable;
+}
+
+void MapObjectItem::setCheckable(bool checkable)
+{
+    // be sure that setChecked is called first
+    // and then do operator=
+    if(checkable == false)
+        setChecked(false);
+    m_checkable = checkable;
+}
+
+void MapObjectItem::setChecked(bool checked)
+{
+    if(!m_checkable)
+        return;
+    if(m_checked == checked)
+        return;
+    m_checked = checked;
+    if(checked) {
+        m_border.setRect(this->boundingRect());
+        m_border.setVisible(true);
+    }
+    else {
+        m_border.setVisible(false);
+    }
 }
 
 const QSet<MapObjectItem *> &MapObjectItem::items()
@@ -172,4 +206,39 @@ QVariant MapObjectItem::itemChange(QGraphicsItem::GraphicsItemChange change, con
        emit coordinateChanged(m_coord);
    }
    return QGraphicsPixmapItem::itemChange(change, value);
+}
+
+void MapObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    if(this->flags() & QGraphicsItem::ItemIsMovable) {
+        this->setScale(1.2);
+        this->setCursor(Qt::DragMoveCursor);
+    }
+    return QGraphicsPixmapItem::hoverEnterEvent(event);
+}
+
+void MapObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    if(this->flags() & QGraphicsItem::ItemIsMovable) {
+        this->setScale(1.0);
+        this->setCursor(Qt::ArrowCursor);
+    }
+    return QGraphicsPixmapItem::hoverEnterEvent(event);
+}
+
+void MapObjectItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsPixmapItem::mousePressEvent(event);
+    if(m_clickable)
+        emit pressed();
+}
+
+void MapObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsPixmapItem::mouseReleaseEvent(event);
+    if(m_clickable) {
+        if(this->contains(event->pos()))
+            emit clicked();
+        emit released();
+    }
 }

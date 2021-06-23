@@ -315,6 +315,8 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
     if(!m_route) { // create route
         m_route = new MapRouteItem;
         m_scene->addItem(m_route);
+        m_route->setEditable(true);
+        m_route->setCheckable(true);
         //
         emit created(m_route);
     }

@@ -4,7 +4,7 @@
 #include "GraphicsMapLib_global.h"
 #include <QGraphicsPathItem>
 #include <QGeoCoordinate>
-#include <QTimer>
+#include <QPen>
 
 class MapObjectItem;
 
@@ -24,16 +24,25 @@ public:
         };
     };
 public:
+    using QGraphicsPathItem::setPen;
+    using QGraphicsPathItem::pen;
+
     MapRouteItem();
     ~MapRouteItem();
     /// 控制可编辑性
     void setEditable(const bool &editable);
-    /// 是否自动航点编号，默认打开从0编号
-    void setAutoNumber(bool on);
+    /// 设置航点可选中
+    void setCheckable(const bool &checkable);
     /// 设置航点被选中
     void setChecked(int index);
     /// 当前选中的航点，-1为空
     int checked() const;
+    /// 设置编辑状态和非编辑状态下两种画笔
+    void setPen(bool editable, const QPen &pen);
+    /// 获取画笔
+    QPen pen(bool editable) const;
+    /// 是否自动航点编号，默认打开从0编号
+    void setAutoNumber(bool on);
     /// 添加航点
     MapObjectItem *append(const Point &point);
     /// 插入航点
@@ -62,12 +71,15 @@ private:
 
 private:
     void updatePolylineAndText(int beginIndex , int endIndex);    ///< 更新航线和航点文字，beginIndex可以用于优化从指定位置开始更新
-    void updateByPoint();
-    MapObjectItem *createPoint();
+    void updateByPointMove();
+    void checkByPointPress();
+    MapObjectItem *createPoint(const QGeoCoordinate &coord);
 
 private:
+    QPen m_normalPen;    ///< 非编辑状态画笔
+    QPen m_editablePen;  ///< 编辑状态画笔
     bool m_editable;     ///< 鼠标是否可交互编辑
-    bool m_sceneAdded;   ///< 是否已被添加到场景
+    bool m_checkable;    ///< 航点可选中性
     bool m_autoNumber;   ///< 航点自动编号
     int  m_checkedIndex; ///< 当前选中航点
     //
