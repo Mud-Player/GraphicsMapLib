@@ -29,7 +29,7 @@ public:
     void setText(const QString &text, Qt::Alignment align = Qt::AlignCenter);
     /// 设置文字颜色
     void setTextColor(const QColor &color);
-    /// 设置鼠标可拖拽(点击和选中将会失效)
+    /// 设置鼠标可拖拽
     void setMovable(bool movable);
     /// 设置可点击
     void setClickable(bool clickable);

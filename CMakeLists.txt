@@ -19,6 +19,8 @@ add_library(${PROJECT_NAME} SHARED
   interactivemap.h
   mapellipseitem.cpp
   mapellipseitem.h
+  maplineitem.cpp
+  maplineitem.h
   mapobjectitem.cpp
   mapobjectitem.h
   mapoperator.cpp

@@ -91,9 +91,6 @@ MapObjectItem *MapRouteItem::insert(const int &index, const MapRouteItem::Point 
     auto ctrlPoint = createPoint(point.coord);
     m_routePoints.insert(index, point);
     m_ctrlItems.insert(index, ctrlPoint);
-    // update point item pos
-    ctrlPoint->setCoordinate(point.coord);
-    connect(ctrlPoint, &MapObjectItem::coordinateChanged, this, &MapRouteItem::updateByPointMove);
     //
     updatePolylineAndText(index, m_routePoints.size()-1);
     //
@@ -146,7 +143,6 @@ const QVector<MapObjectItem*> &MapRouteItem::setPoints(const QVector<MapRouteIte
     for(int i = 0; i < points.size(); ++i) {
         auto ctrlPoint = createPoint(points.at(i).coord);
         m_ctrlItems.append(ctrlPoint);
-        ctrlPoint->setCoordinate(points.at(i).coord);
     }
     //
     updatePolylineAndText(0, m_routePoints.size()-1);

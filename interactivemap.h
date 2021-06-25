@@ -10,6 +10,7 @@ class MapRouteItem;
 class MapObjectItem;
 class MapRangeRingItem;
 class MapTrailItem;
+class MapLineItem;
 
 /*!
  * \brief 可交互地图
@@ -89,6 +90,17 @@ public:
     /// 清空该类管理的所有轨迹
     void clearMapTrail();
 
+	/// 创建线段，之前已有相同ID的将会被覆盖
+	MapLineItem *addMapLine(int id);
+	/// 将自创建的线段添加到该类通过ID管理，相同ID的将会被覆盖
+	void addMapLine(int id, MapLineItem *item);
+	/// 获取线段
+	MapLineItem *getMapLine(int id);
+	/// 删除线段
+	bool removeLine(int id);
+	/// 清空该类管理的所有线段
+	void clearMapLine();
+
     /// 清空该类管理的所有地图元素（若需要删除Operator创建的元素，请将元素通过addXX(int ID)接口添加到管理)
     void clear();
 
@@ -116,6 +128,7 @@ private:
     QHash<int, MapRangeRingItem*> m_rangeRingHash;
     QHash<int, MapRouteItem*>     m_routeHash;
     QHash<int, MapTrailItem*>     m_trailHash;
+	QHash<int, MapLineItem*>      m_lineHash;
     //
     InteractiveMapOperator *m_operator;     ///< 操作器
     const MapObjectItem    *m_centerObj;    ///< 居中对象

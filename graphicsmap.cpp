@@ -206,7 +206,7 @@ void GraphicsMap::updateTile()
     quint8 intZoom = qFloor(m_zoom+0.5);
     //
     qint32 tileCount = qPow(2, intZoom);
-    auto topLeftPos = mapToScene(viewport()->geometry().topLeft());
+    auto topLeftPos = mapToScene(viewport()->geometry().topLeft()-QPoint(256,256));
     auto topRightPos = mapToScene(viewport()->geometry().topRight());
     auto bottomLeftPos = mapToScene(viewport()->geometry().bottomLeft());
     qint32 xOrigin = (topLeftPos.x()+SCENE_LEN/2) / SCENE_LEN * tileCount;

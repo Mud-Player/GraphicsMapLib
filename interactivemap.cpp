@@ -5,6 +5,7 @@
 #include "mapobjectitem.h"
 #include "maprangeringitem.h"
 #include "maptrailitem.h"
+#include "maplineitem.h"
 #include <QDebug>
 
 InteractiveMap::InteractiveMap(QGraphicsScene *scene, QWidget *parent) : GraphicsMap(scene, parent),
@@ -30,7 +31,8 @@ void InteractiveMap::addMapEllipse(int id, MapEllipseItem *item)
     if(m_ellipseHash.contains(id))
         delete m_ellipseHash.take(id);
     m_ellipseHash.insert(id, item);
-    scene()->addItem(item);
+    if(item->scene() != scene())
+        scene()->addItem(item);
 }
 
 bool InteractiveMap::removeMapEllipse(int id)
@@ -63,7 +65,8 @@ void InteractiveMap::addMapObject(int id, MapObjectItem *item)
     if(m_objectHash.contains(id))
         delete m_objectHash.take(id);
     m_objectHash.insert(id, item);
-    scene()->addItem(item);
+    if(item->scene() != scene())
+        scene()->addItem(item);
 }
 
 MapObjectItem *InteractiveMap::getMapObject(int id)
@@ -101,7 +104,8 @@ void InteractiveMap::addMapPolygon(int id, MapPolygonItem *item)
     if(m_polygonHash.contains(id))
         delete m_polygonHash.take(id);
     m_polygonHash.insert(id, item);
-    scene()->addItem(item);
+    if(item->scene() != scene())
+        scene()->addItem(item);
 }
 
 MapPolygonItem *InteractiveMap::getMapPolygon(int id)
@@ -139,7 +143,8 @@ void InteractiveMap::addMapRangeRing(int id, MapRangeRingItem *item)
     if(m_rangeRingHash.contains(id))
         delete m_rangeRingHash.take(id);
     m_rangeRingHash.insert(id, item);
-    scene()->addItem(item);
+    if(item->scene() != scene())
+        scene()->addItem(item);
 }
 
 MapRangeRingItem *InteractiveMap::getMapRangeRing(int id)
@@ -177,7 +182,8 @@ void InteractiveMap::addMapRoute(int id, MapRouteItem *item)
     if(m_routeHash.contains(id))
         delete m_routeHash.take(id);
     m_routeHash.insert(id, item);
-    scene()->addItem(item);
+    if(item->scene() != scene())
+        scene()->addItem(item);
 }
 
 MapRouteItem *InteractiveMap::getMapRoute(int id)
@@ -215,7 +221,8 @@ void InteractiveMap::addMapTrail(int id, MapTrailItem *item)
     if(m_trailHash.contains(id))
         delete m_trailHash.take(id);
     m_trailHash.insert(id, item);
-    scene()->addItem(item);
+    if(item->scene() != scene())
+        scene()->addItem(item);
 }
 
 MapTrailItem *InteractiveMap::getMapTrail(int id)
@@ -236,6 +243,44 @@ void InteractiveMap::clearMapTrail()
 {
     qDeleteAll(m_trailHash.values());
     m_trailHash.clear();
+}
+
+MapLineItem * InteractiveMap::addMapLine(int id)
+{
+	if (m_lineHash.contains(id))
+		delete m_trailHash.take(id);
+	auto item = new MapLineItem;
+	m_lineHash.insert(id, item);
+	scene()->addItem(item);
+	return item;
+}
+
+void InteractiveMap::addMapLine(int id, MapLineItem * item)
+{
+	if (m_lineHash.contains(id))
+		delete m_lineHash.take(id);
+	m_lineHash.insert(id, item);
+	scene()->addItem(item);
+}
+
+MapLineItem * InteractiveMap::getMapLine(int id)
+{
+	return m_lineHash.value(id);
+}
+
+bool InteractiveMap::removeLine(int id)
+{
+	auto item = m_lineHash.take(id);
+	if (!item)
+		return false;
+	delete item;
+	return true;
+}
+
+void InteractiveMap::clearMapLine()
+{
+	qDeleteAll(m_lineHash.values());
+	m_lineHash.clear();
 }
 
 void InteractiveMap::setOperator(InteractiveMapOperator *op)
