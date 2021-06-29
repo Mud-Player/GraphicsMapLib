@@ -68,6 +68,7 @@ public:
     void setTileCacheCount(const int &count);
     /// 设置是否反转Y轴瓦片编号(标准下载的瓦片Y轴编号都是自上而下增加，不过某些情况可能是反的)
     void setYInverted(const bool &isInverted);
+    using QGraphicsView::centerOn;
     /// 居中
     void centerOn(const QGeoCoordinate &coord);
     /// 获取窗口坐标对应的经纬度
