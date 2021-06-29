@@ -22,7 +22,7 @@ class GRAPHICSMAPLIB_EXPORT InteractiveMap : public GraphicsMap
 {
     Q_OBJECT
 public:
-    InteractiveMap(QGraphicsScene *scene, QWidget *parent = nullptr);
+    InteractiveMap(QWidget *parent = nullptr);
 
     /// 创建圆形，之前已有相同ID的将会被覆盖
     MapEllipseItem *addMapEllipse(int id);

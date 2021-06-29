@@ -8,7 +8,7 @@
 #include "maplineitem.h"
 #include <QDebug>
 
-InteractiveMap::InteractiveMap(QGraphicsScene *scene, QWidget *parent) : GraphicsMap(scene, parent),
+InteractiveMap::InteractiveMap(QWidget *parent) : GraphicsMap(parent),
     m_operator(nullptr),
     m_centerObj(nullptr),
     m_scaleable(true)

@@ -16,7 +16,7 @@
 
 QStringList GraphicsMap::m_mapTypes;    ///< 地图资源类型
 
-GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView(scene, parent),
+GraphicsMap::GraphicsMap(QWidget *parent) : QGraphicsView(parent),
     m_type(0),
     m_isloading(false),
     m_hasPendingLoad(false),
@@ -25,9 +25,10 @@ GraphicsMap::GraphicsMap(QGraphicsScene *scene, QWidget *parent) : QGraphicsView
     m_maxZoom(20),
     m_rotation(0)
 {
+    this->setScene(new QGraphicsScene);
     qRegisterMetaType<GraphicsMap::TileSpec>("GraphicsMap::TileSpec");
     qRegisterMetaType<GraphicsMap::TileRegion>("GraphicsMap::TileRegion");
-    viewport()->setObjectName("Map");
+    viewport()->setObjectName("GraphicsMap");
 
     init();
     //
@@ -41,6 +42,7 @@ GraphicsMap::~GraphicsMap()
     for(auto item : m_tiles) {
         this->scene()->removeItem(item);
     }
+    delete scene();
     delete m_mapThread;
 }
 
@@ -162,6 +164,8 @@ void GraphicsMap::resizeEvent(QResizeEvent *event)
     auto zoom = log(len/SCENE_LEN) / log(2);
     m_minZoom = zoom + ZOOM_BASE;
     setZoomLevel(m_zoom);
+    //
+    QGraphicsView::resizeEvent(event);
 }
 
 void GraphicsMap::init()

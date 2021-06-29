@@ -51,7 +51,7 @@ public:
         }
     };
 
-    GraphicsMap(QGraphicsScene *scene, QWidget *parent = nullptr);
+    GraphicsMap(QWidget *parent = nullptr);
     ~GraphicsMap();
     /// 设置更新帧率\param fps 地图定时刷新的帧率，0或者负值可切换为按需更新
     void setFrameRate(int fps);

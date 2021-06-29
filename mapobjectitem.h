@@ -24,6 +24,7 @@ public:
     /// 设置图标，无效资源将使用默认图标
     void setIcon(const QString &url);
     /// 设置图标为纯色，传QColor()可以取消纯色 note: 高分辨图片对该接口性能影响较大
+    /// \bug 第二个目标调用该函数会造成变黑
     void setIconColor(const QColor &color, qreal strength = 1.0);
     /// 设置文字
     void setText(const QString &text, Qt::Alignment align = Qt::AlignCenter);
