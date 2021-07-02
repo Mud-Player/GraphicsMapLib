@@ -8,7 +8,7 @@
 QSet<MapPolygonItem*> MapPolygonItem::m_items;
 
 MapPolygonItem::MapPolygonItem() :
-    m_editable(true),
+    m_editable(false),
     m_sceneAdded(false)
 {
     // keep the outline width of 1-pixel when item scales

@@ -93,13 +93,15 @@ const QGeoCoordinate &MapObjectItem::coordinate() const
     return m_coord;
 }
 
-void MapObjectItem::setIcon(const QString &url)
+void MapObjectItem::setIcon(const QPixmap &pixmap)
 {
     this->setOffset(0, 0);
-    this->setPixmap(url);
     // Reset to default icon
-    if(pixmap().isNull()) {
+    if(pixmap.isNull()) {
         this->setPixmap(QPixmap(default_xpm));
+    }
+    else {
+        this->setPixmap(pixmap);
     }
     // make sure that the center of icon is positioned at current position
     auto boundRect = this->boundingRect();

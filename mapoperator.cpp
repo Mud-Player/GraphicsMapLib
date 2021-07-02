@@ -146,6 +146,7 @@ bool MapPolygonOperator::mouseReleaseEvent(QMouseEvent *event)
     // create begin or append
     if(!m_polygon) {
         m_polygon = new MapPolygonItem;
+        m_polygon->setEditable(true);
         m_scene->addItem(m_polygon);
         //
         emit created(m_polygon);
@@ -328,7 +329,7 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
     }
     auto checked = m_route->checked();
     if(checked < 0)
-        checked = 0;
+        checked = -1;
     // append coordinate for route
     m_route->insert(checked+1, {coord, 0});
     m_route->setChecked(checked+1);
@@ -351,15 +352,15 @@ void MapRangeLineOperator::end()
 
 bool MapRangeLineOperator::mousePressEvent(QMouseEvent *event)
 {
-	if (event->buttons() & Qt::LeftButton) {
+    if (event->buttons() & Qt::LeftButton) {
 		m_pressFirstPos = event->pos();
 
 		if (!m_line) { // create route
 			m_line = new MapLineItem;
 			m_scene->addItem(m_line);
 			m_line->setStartPoint(m_map->toCoordinate(event->pos()));
-			m_line->setStartIcon(QPixmap(":/Resources/position.png"), Qt::AlignHCenter | Qt::AlignTop);
-			m_line->setEndIcon(QPixmap(":/Resources/position.png"), Qt::AlignHCenter | Qt::AlignTop);
+            m_line->setStartIcon(QPixmap(":/Resources/location.png"), Qt::AlignHCenter | Qt::AlignTop);
+            m_line->setEndIcon(QPixmap(":/Resources/location.png"), Qt::AlignHCenter | Qt::AlignTop);
 			//
 			emit created(m_line);
 			m_ignoreEvent = false;
@@ -371,10 +372,9 @@ bool MapRangeLineOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapRangeLineOperator::mouseReleaseEvent(QMouseEvent *event)
 {
+    Q_UNUSED(event)
 	if (m_line) { // delete line
 		m_ignoreEvent = true;
-		m_scene->removeItem(m_line);
-		m_line->deleteLater();
 		m_line = nullptr;
 		return true;
 	}
@@ -387,15 +387,13 @@ bool MapRangeLineOperator::mouseMoveEvent(QMouseEvent *event)
 		return false;
 	auto second = m_map->toCoordinate(event->pos());
 	m_line->setEndPoint(second);
-	double dis = m_line->getPoints()[0].distanceTo(m_line->getPoints()[1]);
-	if (dis > 1000.0)
-	{
+    double dis = m_line->endings().first.distanceTo(m_line->endings().second);
+    if (dis > 1000.0) {
 		dis = dis * 1E-3;
 		QString str = QString::number(dis, 'f', 2) + QString("km");
 		m_line->setText(str);
 	}
-	else if (dis < 1000.0)
-	{
+    else if (dis < 1000.0) {
 		QString str = QString::number(dis,'f',2) + QString("m");
 		m_line->setText(str);
 	}

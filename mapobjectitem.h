@@ -22,9 +22,9 @@ public:
     /// 获取当前经纬度位置
     const QGeoCoordinate &coordinate() const;
     /// 设置图标，无效资源将使用默认图标
-    void setIcon(const QString &url);
+    void setIcon(const QPixmap &pixmap);
     /// 设置图标为纯色，传QColor()可以取消纯色 note: 高分辨图片对该接口性能影响较大
-    /// \bug 第二个目标调用该函数会造成变黑
+    /// \bug QGraphicsView使用OpenGL窗口时，第二个实例调用该函数会变成黑框
     void setIconColor(const QColor &color, qreal strength = 1.0);
     /// 设置文字
     void setText(const QString &text, Qt::Alignment align = Qt::AlignCenter);

@@ -8,11 +8,11 @@ MapTrailItem::MapTrailItem() :
     m_attachObj(nullptr)
 {
     auto pen = this->pen();
-    pen.setWidth(2);
+    pen.setWidth(5);
     pen.setCosmetic(true);  // it will be always 2 pixmap whatever scale transform
     pen.setCapStyle(Qt::RoundCap);
     pen.setJoinStyle(Qt::RoundJoin);
-    pen.setColor(Qt::yellow);
+    pen.setColor({255, 255, 0, 200});
     this->setPen(pen);
     //
     m_items.insert(this);

@@ -209,7 +209,7 @@ MapObjectItem *MapRouteItem::createPoint(const QGeoCoordinate &coord)
 {
     auto ctrlPoint = new MapObjectItem;
     ctrlPoint->setParentItem(this);
-    ctrlPoint->setIcon(":/Resources/dot.png");
+    ctrlPoint->setIcon({":/Resources/dot.png"});
     ctrlPoint->setCoordinate(coord);
     ctrlPoint->setMovable(m_editable);
     ctrlPoint->setCheckable(true);
