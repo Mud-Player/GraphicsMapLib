@@ -81,8 +81,10 @@ void MapRangeRingItem::attach(MapObjectItem *obj)
 
 void MapRangeRingItem::detach()
 {
-    if(m_attachObj)
+    if(m_attachObj) {
         disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapRangeRingItem::setCoordinate);
+        disconnect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapRangeRingItem::setRotation);
+    }
     m_attachObj = nullptr;
 }
 

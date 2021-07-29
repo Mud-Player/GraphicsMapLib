@@ -6,6 +6,8 @@
 #include <QGeoCoordinate>
 #include <QSet>
 
+class MapObjectItem;
+
 /*!
  * \brief 扇形
  * \details 可用于SAR、红外等效果的扇形区域
@@ -46,8 +48,9 @@ private:
  * \details 可用于SAR、红外等效果的威力区
  * \note 更改三角形和梯形外观，请通过getTriangle和getTrapezoid获取实例，然后更改画笔和画刷
  */
-class GRAPHICSMAPLIB_EXPORT MapTriTrapItem : public QGraphicsPolygonItem
+class GRAPHICSMAPLIB_EXPORT MapTriTrapItem : public QObject, public QGraphicsPolygonItem
 {
+    Q_OBJECT
 public:
     MapTriTrapItem();
     ~MapTriTrapItem();
@@ -65,6 +68,10 @@ public:
     QGraphicsPolygonItem *getTriangle();
     /// 获取梯形
     QGraphicsPolygonItem *getTrapezoid();
+    /// 依附到地图对象，将会自动更新位置
+    void attach(MapObjectItem *obj);
+    /// 取消依附地图对象，后续手动更新位置
+    void detach();
 
 public:
     /// 获取所有的实例
@@ -72,6 +79,7 @@ public:
 
 private:
     void updateTrapezoid();
+    void on_attachRotationChanged(const qreal &degree);
 
 private:
     static QSet<MapTriTrapItem*> m_items;         ///< 所有实例
@@ -85,5 +93,8 @@ private:
     //
     QGraphicsPolygonItem m_triangle;
     QGraphicsPolygonItem m_trapezoid;
+    //
+    MapObjectItem *m_attachObj;
+    qreal          m_attachAzimuth;
 };
 #endif // MAPPIEITEM_H

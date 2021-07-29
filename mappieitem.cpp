@@ -1,5 +1,6 @@
 ﻿#include "mappieitem.h"
 #include "graphicsmap.h"
+#include "mapobjectitem.h"
 
 QSet<MapPieItem*> MapPieItem::m_items;
 QSet<MapTriTrapItem*> MapTriTrapItem::m_items;
@@ -46,7 +47,7 @@ void MapPieItem::setRadius(const qreal &meter)
 
 void MapPieItem::setAzimuth(const qreal &degree)
 {
-    if(m_azimuth == m_azimuth)
+    if(m_azimuth == degree)
         return;
     m_azimuth = degree;
     // aizmuth will not change Rect
@@ -85,7 +86,9 @@ MapTriTrapItem::MapTriTrapItem():
     m_near(10e3),
     m_far(20e3),
     m_azimuth(0),
-    m_span(0)
+    m_span(0),
+    m_attachObj(nullptr),
+    m_attachAzimuth(0)
 {
     // keep the outline width of 1-pixel when item scales
     auto pen = this->pen();
@@ -132,7 +135,7 @@ void MapTriTrapItem::setNear(const qreal &meter)
 
 void MapTriTrapItem::setAzimuth(const qreal &degree)
 {
-    if(m_azimuth == m_azimuth)
+    if(m_azimuth == degree)
         return;
     m_azimuth = degree;
     //
@@ -158,11 +161,34 @@ QGraphicsPolygonItem *MapTriTrapItem::getTrapezoid()
     return &m_trapezoid;
 }
 
+void MapTriTrapItem::attach(MapObjectItem *obj)
+{
+    if(m_attachObj) {
+        disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTriTrapItem::setCoordinate);
+        disconnect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapTriTrapItem::on_attachRotationChanged);
+    }
+    m_attachObj = obj;
+    connect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTriTrapItem::setCoordinate);
+    connect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapTriTrapItem::on_attachRotationChanged);
+    setCoordinate(m_attachObj->coordinate());
+    on_attachRotationChanged(m_attachObj->rotation());
+}
+
+void MapTriTrapItem::detach()
+{
+    if(m_attachObj) {
+        disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTriTrapItem::setCoordinate);
+        disconnect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapTriTrapItem::on_attachRotationChanged);
+        m_attachAzimuth = 0;
+    }
+    m_attachObj = nullptr;
+}
+
 void MapTriTrapItem::updateTrapezoid()
 {
     auto span_2 = m_span / 2;
-    auto beginAz = m_azimuth - span_2;
-    auto endAz = m_azimuth + span_2;
+    auto beginAz = m_azimuth + m_attachAzimuth - span_2;
+    auto endAz = m_azimuth + m_attachAzimuth + span_2;
     auto coord1 = m_coord.atDistanceAndAzimuth(m_near, beginAz);
     auto coord2 = m_coord.atDistanceAndAzimuth(m_near, endAz);
     auto coord3 = m_coord.atDistanceAndAzimuth(m_far, endAz);
@@ -194,4 +220,12 @@ void MapTriTrapItem::updateTrapezoid()
         polygon.append(point4);
         m_trapezoid.setPolygon(polygon);
     }
+}
+
+void MapTriTrapItem::on_attachRotationChanged(const qreal &degree)
+{
+    if(m_attachAzimuth == degree)
+        return;
+    m_attachAzimuth = degree;
+    updateTrapezoid();
 }
