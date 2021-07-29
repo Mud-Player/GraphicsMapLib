@@ -18,7 +18,7 @@ class GRAPHICSMAPLIB_EXPORT InteractiveMap : public GraphicsMap
 public:
     InteractiveMap(QWidget *parent = nullptr);
 
-    /// 创建地图元素，之前已有相同ID的将会被覆盖
+    /// 创建地图元素
     template<class T>
     T *addMapItem();
     /// 删除地图元素
