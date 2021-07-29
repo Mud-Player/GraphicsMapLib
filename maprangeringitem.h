@@ -63,7 +63,7 @@ private:
     //
     QGeoCoordinate m_coord;     ///< 位置
     float          m_radius;    ///< 半径
-    qreal          m_rotation;  ///<
+    qreal          m_rotation;  ///< 旋转
     //
     QRectF m_boundRect;
     //

@@ -139,6 +139,7 @@ void MapRangeRingItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     //
     painter->setPen(m_pen);
     painter->setFont(m_font);
+    painter->setBrush(Qt::NoBrush);
     auto radius0 = ellpiseRadius(m_radius / 3);
     auto radius1 = ellpiseRadius(m_radius / 3 * 2);
     auto radius2 = ellpiseRadius(m_radius);
