@@ -64,10 +64,10 @@ public:
     void setRotation(const qreal &degree);
     /// 获取当前朝向
     const qreal &rotation() const;
-    /// 设置瓦片缓存数量
+    /// 设置瓦片缓存数量 默认1000张瓦片
     void setTileCacheCount(const int &count);
-    /// 设置是否反转Y轴瓦片编号(标准下载的瓦片Y轴编号都是自上而下增加，不过某些情况可能是反的)
-    void setYInverted(const bool &isInverted);
+    /// 设置TMS瓦片协议 默认XYZ协议（在TMS协议中，y=0的瓦片是最南边的瓦片，而在XYZ模式(OGC WMTS也使用)中，y=0的瓦片是最北边的瓦片)
+    void setTMSMode(const bool &on);
     using QGraphicsView::centerOn;
     /// 居中
     void centerOn(const QGeoCoordinate &coord);
@@ -150,10 +150,10 @@ public slots:
     void requestPath(const QString &path);
 
 public:
-    /// 设置瓦片缓存数量
+    /// 设置瓦片缓存数量 默认1000张瓦片
     void setTileCacheCount(const int &count);
-    /// 设置是否Y轴瓦片编号(标准下载的瓦片Y轴编号都是自上而下增加，不过某些情况可能是反的)
-    void setYInverted(const bool &isInverted);
+    /// 设置TMS瓦片协议 默认XYZ协议（在TMS协议中，y=0的瓦片是最南边的瓦片，而在XYZ模式(OGC WMTS也使用)中，y=0的瓦片是最北边的瓦片)
+    void setTMSMode(const bool &on);
 
 signals:
     void tileToAdd(QGraphicsItem *tile);
@@ -175,7 +175,7 @@ private:
     GraphicsMap::TileRegion m_tileRegion;    ///< 请求的瓦片区域
     //
     QString          m_path;
-    bool             m_yInverted;
+    bool             m_bTMS;
 };
 
 #endif // GRAPHICSMAP_H

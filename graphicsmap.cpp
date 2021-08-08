@@ -104,9 +104,9 @@ void GraphicsMap::setTileCacheCount(const int &count)
     m_mapThread->setTileCacheCount(count);
 }
 
-void GraphicsMap::setYInverted(const bool &isInverted)
+void GraphicsMap::setTMSMode(const bool &on)
 {
-    m_mapThread->setYInverted(isInverted);
+    m_mapThread->setTMSMode(on);
 }
 
 void GraphicsMap::centerOn(const QGeoCoordinate &coord)
@@ -237,7 +237,7 @@ GraphicsMapThread::TileCacheNode::~TileCacheNode()
 }
 
 GraphicsMapThread::GraphicsMapThread():
-    m_yInverted(false)
+    m_bTMS(false)
 {
     m_tileCache.setMaxCost(1000);
     //
@@ -336,9 +336,9 @@ void GraphicsMapThread::setTileCacheCount(const int &count)
     m_tileCache.setMaxCost(count);
 }
 
-void GraphicsMapThread::setYInverted(const bool &isInverted)
+void GraphicsMapThread::setTMSMode(const bool &on)
 {
-    m_yInverted = isInverted;
+    m_bTMS = on;
 }
 
 void GraphicsMapThread::showItem(const GraphicsMap::TileSpec &tileSpec)
@@ -381,7 +381,7 @@ QGraphicsPixmapItem *GraphicsMapThread::loadTileItem(const GraphicsMap::TileSpec
             .arg(m_path)
             .arg(tileSpec.zoom)
             .arg(tileSpec.x)
-            .arg(m_yInverted ? tileCount - tileSpec.y - 1 : tileSpec.y);
+            .arg(m_bTMS ? tileCount - tileSpec.y - 1 : tileSpec.y);
     if(QFileInfo::exists(fileName+".jpg"))
         fileName += ".jpg";
     else if(QFileInfo::exists(fileName+".png"))
