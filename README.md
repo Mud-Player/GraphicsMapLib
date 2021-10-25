@@ -1,4 +1,4 @@
-﻿﻿﻿﻿# My Environment
+﻿# My Environment
 
 - 操作系统：Windows 10
 - Qt版本：5.12.8
