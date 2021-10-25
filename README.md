@@ -1,4 +1,4 @@
-﻿# My Environment
+﻿﻿# My Environment
 
 - 操作系统：Windows 10
 - Qt版本：5.12.8
@@ -35,7 +35,7 @@
        map->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
        map->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
    ```
-   ![image-20211025143100893](C:\Users\Zhaoli\AppData\Roaming\Typora\typora-user-images\image-20211025143100893.png)
+   ![](https://raw.githubusercontent.com/Mud-Player/MudPic/main/02GraphicsMapLib/quick_hide_scroll.png)
 
 3. 设置缩放等级：
 
