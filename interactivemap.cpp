@@ -50,6 +50,7 @@ void InteractiveMap::setCenter(const MapObjectItem *obj)
         connect(obj, &MapObjectItem::coordinateChanged, this, qOverload<const QGeoCoordinate&>(&GraphicsMap::centerOn));
         this->setDragMode(QGraphicsView::NoDrag);
         this->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+        centerOn(obj->coordinate());
     }
     // restore previous drag mode if centerOn is unset
     else {
