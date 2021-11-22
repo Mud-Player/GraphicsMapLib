@@ -212,9 +212,15 @@ void MapRangeRingItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     // 4.draw distance text
     painter->rotate(45);
-    painter->drawText(0, -radius0.ry(),  QString::number(m_radius/3)+"Km");
-    painter->drawText(0, -radius1.ry(),  QString::number(m_radius/3*2)+"Km");
-    painter->drawText(0, -radius2.ry(),  QString::number(m_radius)+"Km");
+    auto km = QString::number(m_radius/3)+"Km";
+    textRect = fontMetrix.boundingRect(km);
+    painter->drawText(-textRect.width()/2, -radius0.y(), km);
+    km = QString::number(m_radius/3*2)+"Km";
+    textRect = fontMetrix.boundingRect(km);
+    painter->drawText(-textRect.width()/2, -radius1.y(), km);
+    km = QString::number(m_radius)+"Km";
+    textRect = fontMetrix.boundingRect(km);
+    painter->drawText(-textRect.width()/2, -radius2.y(), km);
     painter->rotate(-45);
     // Painter End
     painter->restore();
