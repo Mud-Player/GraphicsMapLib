@@ -167,11 +167,13 @@ void MapTriTrapItem::attach(MapObjectItem *obj)
         disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTriTrapItem::setCoordinate);
         disconnect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapTriTrapItem::on_attachRotationChanged);
     }
-    m_attachObj = obj;
-    connect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTriTrapItem::setCoordinate);
-    connect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapTriTrapItem::on_attachRotationChanged);
-    setCoordinate(m_attachObj->coordinate());
-    on_attachRotationChanged(m_attachObj->rotation());
+    if(obj) {
+        m_attachObj = obj;
+        connect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTriTrapItem::setCoordinate);
+        connect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapTriTrapItem::on_attachRotationChanged);
+        setCoordinate(m_attachObj->coordinate());
+        on_attachRotationChanged(m_attachObj->rotation());
+    }
 }
 
 void MapTriTrapItem::detach()

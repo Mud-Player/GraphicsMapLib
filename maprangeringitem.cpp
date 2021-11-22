@@ -72,10 +72,12 @@ void MapRangeRingItem::attach(MapObjectItem *obj)
         disconnect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapRangeRingItem::setRotation);
     }
     //
-    m_attachObj = obj;
-    if(m_attachObj) {
+    if(obj) {
+        m_attachObj = obj;
         connect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapRangeRingItem::setCoordinate);
         connect(m_attachObj, &MapObjectItem::rotationChanged, this, &MapRangeRingItem::setRotation);
+        setCoordinate(m_attachObj->coordinate());
+        setRotation(m_attachObj->rotation());
     }
 }
 
