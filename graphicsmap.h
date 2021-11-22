@@ -59,9 +59,9 @@ public:
     void setTilePath(const QString &path);
     /// 设置缩放等级
     void setZoomLevel(const float &zoom);
+    const float &zoomLevel() const;
     /// 设置缩放等级范围
     void setZoomRange(int min, int max);
-    const float &zoomLevel() const;
     /// 设置朝向，正北为起始，向右为正，向左为负 \bug 由于QGraphicsView滚动条精度问题，会造成中心点抖动
     void setRotation(const qreal &degree);
     /// 获取当前朝向
@@ -114,7 +114,7 @@ private:
     float m_zoom;               ///< 当前层级
     float m_minZoom;            ///< 最小缩放层级，刚好适应窗口大小
     float m_maxZoom;            ///< 最大缩放层级，防止无限放大
-    bool  m_computeMinZoom;     ///< 窗口缩放时，是否计算最小缩放层级
+    float m_preferMinZoom;      ///< 预期最小缩放层级，-1代表未设置
     qreal m_rotation;           ///< 旋转角度
 };
 Q_DECLARE_METATYPE(GraphicsMap::TileSpec);

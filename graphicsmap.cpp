@@ -83,18 +83,17 @@ void GraphicsMap::setZoomLevel(const float &zoom)
     emit zoomChanged(m_zoom);
 }
 
+const float &GraphicsMap::zoomLevel() const
+{
+    return m_zoom;
+}
+
 void GraphicsMap::setZoomRange(int min, int max)
 {
     if(min > max)
         return;
-    m_computeMinZoom = false;
-    m_minZoom = qBound(0, min, 20);
-    m_maxZoom = qBound(0, max, 20);
-}
-
-const float &GraphicsMap::zoomLevel() const
-{
-    return m_zoom;
+    m_preferMinZoom = min;
+    m_maxZoom = qBound(min, max, 20);
 }
 
 void GraphicsMap::setRotation(const qreal &degree)
@@ -172,10 +171,18 @@ void GraphicsMap::resizeEvent(QResizeEvent *event)
     double len = qMax(event->size().width(), event->size().height());
     auto zoom = log(len/SCENE_LEN) / log(2);
     float minZoom = zoom + ZOOM_BASE;
-    if(m_computeMinZoom) {
-        m_minZoom = qMax(m_minZoom , minZoom);
-        setZoomLevel(m_zoom);
+    // we setted a zoom level range alreayd
+    if(m_preferMinZoom >= 0) {
+        if(minZoom < m_preferMinZoom)
+            m_minZoom = m_preferMinZoom;
+        else
+            m_minZoom = minZoom;
     }
+    // just set a most suitable minimum level
+    else {
+        m_minZoom = minZoom;
+    }
+    setZoomLevel(m_zoom);
     //
     QGraphicsView::resizeEvent(event);
 }
