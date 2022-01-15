@@ -44,9 +44,10 @@ public:
     static const QSet<MapObjectItem*> &items();
 
 signals:
-    void clicked();
+    void clicked(bool checked = false);
     void pressed();
     void released();
+    void toggled(bool checked);
     void coordinateChanged(const QGeoCoordinate &coord);
     void rotationChanged(const qreal &degree);
 

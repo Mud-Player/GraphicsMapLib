@@ -231,16 +231,24 @@ void MapObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 void MapObjectItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsPixmapItem::mousePressEvent(event);
-    if(m_clickable)
+    if(m_clickable) {
         emit pressed();
+        event->accept();
+    }
 }
 
 void MapObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsPixmapItem::mouseReleaseEvent(event);
-    if(m_clickable) {
-        if(this->contains(event->pos()))
-            emit clicked();
+    // We assume that m_clickable is true, else we can't be called
+    if(this->contains(event->pos())) {
+        if(m_checkable) {
+            setChecked(!m_checked);
+            emit toggled(m_checked);
+        }
         emit released();
+        emit clicked(m_checked);
     }
+    else
+        emit released();
 }
