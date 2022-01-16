@@ -67,11 +67,13 @@ void GraphicsMap::setTilePath(const QString &path)
     updateTile();
 }
 
-void GraphicsMap::setZoomLevel(const float &zoom)
+void GraphicsMap::setZoomLevel(float zoom)
 {
-    if(m_zoom == zoom)
+    auto boundZoom = qBound(m_minZoom, zoom, m_maxZoom);
+    if(m_zoom == boundZoom)
         return;
-    m_zoom = qBound(m_minZoom, zoom, m_maxZoom);
+
+    m_zoom = boundZoom;
     auto zoomLevelDiff = m_zoom - ZOOM_BASE;
     auto scaleValue = qPow(2, zoomLevelDiff);
     this->setTransform(QTransform::fromScale(scaleValue, scaleValue).rotate(-m_rotation));

@@ -58,7 +58,7 @@ public:
     /// 设置瓦片路径
     void setTilePath(const QString &path);
     /// 设置缩放等级
-    void setZoomLevel(const float &zoom);
+    void setZoomLevel(float zoom);
     const float &zoomLevel() const;
     /// 设置缩放等级范围
     void setZoomRange(int min, int max);
