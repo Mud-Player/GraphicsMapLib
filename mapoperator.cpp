@@ -218,8 +218,6 @@ void MapRouteOperator::setWaypointIcon(const QPixmap &pixmap)
 void MapRouteOperator::ready()
 {
     m_route = nullptr;
-    m_finishRequested = false;
-    m_isChecking = false;
 }
 
 void MapRouteOperator::end()
@@ -227,7 +225,6 @@ void MapRouteOperator::end()
     if(m_route)
         m_route->setMoveable(false);
     m_route = nullptr;
-    m_isChecking = false;
 }
 
 bool MapRouteOperator::keyPressEvent(QKeyEvent *event)
@@ -248,15 +245,26 @@ bool MapRouteOperator::mouseDoubleClickEvent(QMouseEvent *event)
     Q_UNUSED(event)
     // the last point have been craeted since previous mouse release event
     if(m_route) {
-        m_finishRequested = true;
+        m_route->setMoveable(false);
+        m_route->setCheckable(false);
     }
+    m_route = nullptr;
+    emit completed();
+    return false;
     return false;
 }
 
 bool MapRouteOperator::mousePressEvent(QMouseEvent *event)
 {
+    // complete
     if(event->buttons() & Qt::RightButton) {
-        m_finishRequested = true;
+        if(m_route) {
+            m_route->setMoveable(false);
+            m_route->setCheckable(false);
+        }
+        m_route = nullptr;
+        emit completed();
+        ignoreMouseEventLoop();
         return false;
     }
     m_pressPos = event->pos();
@@ -266,11 +274,10 @@ bool MapRouteOperator::mousePressEvent(QMouseEvent *event)
     // check that if we clicked waypoint
     auto mouseItems = m_map->items(event->pos());
     auto routeItems = m_route->childItems();
-    m_isChecking = false;
     for(auto item : mouseItems) {
         // find MapObjectItem child
         if(m_route->childItems().contains(item)) {
-            m_isChecking = true;
+            ignoreMouseEventLoop();
             return false;   // the waypoint itself will process setChecked
         }
     }
@@ -279,21 +286,10 @@ bool MapRouteOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(m_isChecking)
-        return false;
-    // create end
-    if(m_finishRequested) {
-        m_finishRequested = false;
-        if(m_route)
-            m_route->setMoveable(false);
-            m_route->setCheckable(false);
-        m_route = nullptr;
-        emit finished();
-        return false;
-    }
     // do nothing
     if((m_pressPos-event->pos()).manhattanLength() > 3)
         return false;
+
     // create begin or append
     auto coord = m_map->toCoordinate(event->pos());
     coord.setAltitude(0);

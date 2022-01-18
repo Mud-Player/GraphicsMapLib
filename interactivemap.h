@@ -82,6 +82,8 @@ public:
     InteractiveMapOperator(QObject *parent = nullptr);
     inline QGraphicsScene *scene() const {return m_scene;};
     inline GraphicsMap *map() const {return m_map;};
+    inline bool isIgnoreKeyEventLoop() const {return m_ignoreKeyEventLoop;}
+    inline bool isIgnoreMouseEventLoop() const {return m_ignoreMouseEventLoop;}
 
 signals:
     /// 编辑完成信号
@@ -90,6 +92,13 @@ signals:
 private:
     inline void setScene(QGraphicsScene *scene) {m_scene = scene;};
     inline void setMap(InteractiveMap *map) {m_map = map;};
+
+protected:
+    /// 忽略一次按键事件循环，从press到release的事件，通常在mousePressEvent调用
+    inline void ignoreKeyEventLoop() {m_ignoreKeyEventLoop = true;};
+    /// 忽略一次鼠标事件循环，从press到release的事件，通常在keyPressEvent调用
+    void ignoreMouseEventLoop() {m_ignoreMouseEventLoop = true;};
+
 
 protected:
     virtual void ready(){}; /// 重新被设置为操作器的时候将会被调用
@@ -104,6 +113,10 @@ protected:
 protected:
     QGraphicsScene *m_scene;
     InteractiveMap *m_map;
+
+private:
+    bool m_ignoreKeyEventLoop = false;
+    bool m_ignoreMouseEventLoop = false;
 };
 
 #endif // INTERACTIVEMAP_H

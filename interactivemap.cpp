@@ -80,39 +80,45 @@ void InteractiveMap::wheelEvent(QWheelEvent *e)
 
 void InteractiveMap::keyPressEvent(QKeyEvent *event)
 {
-    if(!m_operator || !m_operator->keyPressEvent(event))
+    if(!m_operator || m_operator->isIgnoreKeyEventLoop() || !m_operator->keyPressEvent(event))
         GraphicsMap::keyPressEvent(event);
 }
 
 void InteractiveMap::keyReleaseEvent(QKeyEvent *event)
 {
-    if(!m_operator || !m_operator->keyReleaseEvent(event))
+    if(!m_operator || m_operator->isIgnoreKeyEventLoop() || !m_operator->keyReleaseEvent(event))
         GraphicsMap::keyReleaseEvent(event);
+    if(m_operator)
+        m_operator->m_ignoreKeyEventLoop = false;
 }
 
 void InteractiveMap::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    if(!m_operator || !m_operator->mouseDoubleClickEvent(event))
+    if(!m_operator || m_operator->isIgnoreMouseEventLoop()  || !m_operator->mouseDoubleClickEvent(event))
         GraphicsMap::mouseDoubleClickEvent(event);
 }
 
 void InteractiveMap::mouseMoveEvent(QMouseEvent *event)
 {
     // TODO: move event will be generated whether press event is triggerd or not
-    if(!event->buttons() || !m_operator || !m_operator->mouseMoveEvent(event))
+    if(!event->buttons() || m_operator->isIgnoreMouseEventLoop()  || !m_operator || !m_operator->mouseMoveEvent(event))
         GraphicsMap::mouseMoveEvent(event);
 }
 
 void InteractiveMap::mousePressEvent(QMouseEvent *event)
 {
-    if(!m_operator || !m_operator->mousePressEvent(event))
+    if(!m_operator || m_operator->isIgnoreMouseEventLoop() || !m_operator->mousePressEvent(event))
         GraphicsMap::mousePressEvent(event);
+
     viewport()->setCursor(Qt::ArrowCursor);
 }
 
 void InteractiveMap::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(!m_operator || !m_operator->mouseReleaseEvent(event))
+    if(!m_operator || m_operator->isIgnoreMouseEventLoop() || !m_operator->mouseReleaseEvent(event))
         GraphicsMap::mouseReleaseEvent(event);
+    if(m_operator)
+        m_operator->m_ignoreMouseEventLoop = false;
+
     viewport()->setCursor(Qt::ArrowCursor);
 }

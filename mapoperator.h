@@ -109,8 +109,6 @@ public:
 signals:
     ///< 创建信号
     void created(MapRouteItem *item);
-    ///< 结束编辑信号
-    void finished();
 
 protected:
     virtual void ready() override;
@@ -121,8 +119,6 @@ protected:
     virtual bool mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-    bool     m_finishRequested;
-    bool     m_isChecking;  ///< 点中了一个航点
     QPoint   m_pressPos;
     //
     MapRouteItem  *m_route = nullptr;
