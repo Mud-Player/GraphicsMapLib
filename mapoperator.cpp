@@ -159,6 +159,22 @@ MapObjectOperator::MapObjectOperator(QObject *parent) : InteractiveMapOperator(p
 {
 }
 
+void MapObjectOperator::edit(MapObjectItem *obj, MapRouteItem *route)
+{
+    m_object = obj;
+    m_route = route;
+}
+
+void MapObjectOperator::setObjectIcon(const QPixmap &pixmap)
+{
+    m_objectIcon = pixmap;
+}
+
+void MapObjectOperator::setWaypointIcon(const QPixmap &pixmap)
+{
+    m_waypointIcon = pixmap;
+}
+
 void MapObjectOperator::ready()
 {
     m_object = nullptr;
@@ -190,6 +206,7 @@ bool MapObjectOperator::mouseDoubleClickEvent(QMouseEvent *event)
     // the last point have been craeted since previous mouse release event
     if(m_object) {
         m_finishRequested = true;
+        emit completed();
     }
     return false;
 }
@@ -198,6 +215,7 @@ bool MapObjectOperator::mousePressEvent(QMouseEvent *event)
 {
     if(event->buttons() & Qt::RightButton) {
         m_finishRequested = true;
+        emit completed();
         return false;
     }
     m_pressPos = event->pos();
@@ -222,6 +240,9 @@ bool MapObjectOperator::mouseReleaseEvent(QMouseEvent *event)
     auto coord = m_map->toCoordinate(event->pos());
     if(!m_object) { // create object only
         m_object = new MapObjectItem;
+        if(!m_objectIcon.isNull()) {
+            m_object->setIcon(m_objectIcon);
+        }
         m_scene->addItem(m_object);
         m_object->setZValue(1);
         m_object->setCoordinate(coord);
@@ -231,13 +252,19 @@ bool MapObjectOperator::mouseReleaseEvent(QMouseEvent *event)
     else { // we need to set route for object
         if(!m_route) { // create route
             m_route = new MapRouteItem;
-            m_route->append({m_object->coordinate(), 0});
+            auto point = m_route->append(m_object->coordinate());
+            if(!m_waypointIcon.isNull()) {
+                point->setIcon(m_waypointIcon);
+            }
             m_scene->addItem(m_route);
             //
             emit created(m_route);
         }
         // append coordinate for route
-        m_route->append({coord, 0});
+        auto point = m_route->append(coord);
+        if(!m_waypointIcon.isNull()) {
+            point->setIcon(m_waypointIcon);
+        }
     }
     return false;
 }
@@ -331,7 +358,7 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
     if(checked < 0)
         checked = -1;
     // append coordinate for route
-    m_route->insert(checked+1, {coord, 0});
+    m_route->insert(checked+1, coord);
     m_route->setChecked(checked+1);
     return false;
 }

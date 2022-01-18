@@ -15,7 +15,7 @@ class GRAPHICSMAPLIB_EXPORT MapObjectItem : public QObject, public QGraphicsPixm
 {
     Q_OBJECT
 public:
-    MapObjectItem();
+    MapObjectItem(const QGeoCoordinate &coord = {0, 0, 0});
     ~MapObjectItem();
     /// 设置经纬度位置
     void setCoordinate(const QGeoCoordinate &coord);

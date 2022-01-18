@@ -77,6 +77,14 @@ class GRAPHICSMAPLIB_EXPORT MapObjectOperator : public InteractiveMapOperator
 public:
     MapObjectOperator(QObject *parent = nullptr);
 
+    /// 编辑已经创建的对象(请确保被应用为操作器后再调用)
+    void edit(MapObjectItem *obj, MapRouteItem *route);
+
+    /// 设置对象的默认图标
+    void setObjectIcon(const QPixmap &pixmap);
+    /// 设置航点的默认图标
+    void setWaypointIcon(const QPixmap &pixmap);
+
 signals:
     void created(MapObjectItem *item);
     void created(MapRouteItem *item);
@@ -95,6 +103,9 @@ private:
     //
     MapObjectItem *m_object;
     MapRouteItem  *m_route;
+    //
+    QPixmap  m_objectIcon;
+    QPixmap  m_waypointIcon;
 };
 
 /*!

@@ -83,6 +83,10 @@ public:
     inline QGraphicsScene *scene() const {return m_scene;};
     inline GraphicsMap *map() const {return m_map;};
 
+signals:
+    /// 编辑完成信号
+    void completed();
+
 private:
     inline void setScene(QGraphicsScene *scene) {m_scene = scene;};
     inline void setMap(InteractiveMap *map) {m_map = map;};

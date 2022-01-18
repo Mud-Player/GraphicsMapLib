@@ -54,7 +54,7 @@ static const char *default_xpm[] = {
 
 QSet<MapObjectItem*> MapObjectItem::m_items;
 
-MapObjectItem::MapObjectItem()
+MapObjectItem::MapObjectItem(const QGeoCoordinate &coord)
 {
     auto font = m_text.font();
     font.setFamily("Microsoft YaHei");
@@ -71,6 +71,9 @@ MapObjectItem::MapObjectItem()
     setIcon(QString());
     //
     m_items.insert(this);
+
+    //
+    setCoordinate(coord);
 }
 
 MapObjectItem::~MapObjectItem()

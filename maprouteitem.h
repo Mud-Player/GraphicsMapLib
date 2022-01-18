@@ -10,19 +10,11 @@ class MapObjectItem;
 
 /*!
  * \brief 航路
+ * \note 航路类将负责航点的生命周期
  */
 class GRAPHICSMAPLIB_EXPORT MapRouteItem : public QObject, public QGraphicsPathItem
 {
     Q_OBJECT
-public:
-    /// 航点定义
-    struct Point {
-        QGeoCoordinate coord;   ///< 经纬高
-        float          speed;   ///< 速度 km/h
-        inline bool operator==(const Point &rhs) const {
-            return (this->coord == rhs.coord && this->speed == rhs.speed);
-        };
-    };
 public:
     using QGraphicsPathItem::setPen;
     using QGraphicsPathItem::pen;
@@ -41,51 +33,49 @@ public:
     void setPen(bool editable, const QPen &pen);
     /// 获取画笔
     QPen pen(bool editable) const;
-    /// 是否自动航点编号，默认打开从0编号
-    void setAutoNumber(bool on);
     /// 添加航点
-    MapObjectItem *append(const Point &point);
+    MapObjectItem *append(MapObjectItem *point);
+    MapObjectItem *append(const QGeoCoordinate &coord);
     /// 插入航点
-    MapObjectItem *insert(const int &index, const Point &point);
+    MapObjectItem *insert(const int &index, MapObjectItem *point);
+    MapObjectItem *insert(const int &index, const QGeoCoordinate &coord);
     /// 替换航点
-    MapObjectItem *replace(const int &index, const Point &point);
+    MapObjectItem *replace(const int &index, MapObjectItem *point);
+    MapObjectItem *replace(const int &index, const QGeoCoordinate &coord);
     /// 删除航点
     void remove(const int &index);
     /// 设置航点
-    const QVector<MapObjectItem*> &setPoints(const QVector<Point> &points);
+    const QVector<MapObjectItem*> &setPoints(const QVector<MapObjectItem*> &points);
     /// 获取航点列表
-    const QVector<Point> &points() const;
+    const QVector<MapObjectItem*> &points() const;
 
 public:
     /// 获取所有的实例
     static const QSet<MapRouteItem*> &items();
 
 signals:
-    void added(const int &index, const Point &point);
-    void removed(const int &index, Point &point);
-    void updated(const int &index, const Point &point);
+    void added(const int &index, const MapObjectItem *point);
+    void removed(const int &index);
+    void updated(const int &index, const MapObjectItem *point);
     void changed();
 
 private:
     static QSet<MapRouteItem*> m_items;         ///< 所有实例
 
 private:
-    void updatePolylineAndText(int beginIndex , int endIndex);    ///< 更新航线和航点文字，beginIndex可以用于优化从指定位置开始更新
+    void updatePolyline();
     void updateByPointMove();
     void checkByPointPress();
-    MapObjectItem *createPoint(const QGeoCoordinate &coord);
+    void bindPoint(MapObjectItem *point);
 
 private:
     QPen m_normalPen;    ///< 非编辑状态画笔
     QPen m_editablePen;  ///< 编辑状态画笔
     bool m_editable;     ///< 鼠标是否可交互编辑
     bool m_checkable;    ///< 航点可选中性
-    bool m_autoNumber;   ///< 航点自动编号
     int  m_checkedIndex; ///< 当前选中航点
     //
-    QVector<Point>            m_routePoints;    ///< 航点数据
-    QVector<MapObjectItem*>   m_ctrlItems;      ///< 航点元素
+    QVector<MapObjectItem*>   m_points;      ///< 航点元素
 };
-Q_DECLARE_METATYPE(MapRouteItem::Point)
 
 #endif // MAPROUTEITEM_H
