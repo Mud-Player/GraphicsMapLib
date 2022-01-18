@@ -21,14 +21,15 @@ public:
 
     MapRouteItem();
     ~MapRouteItem();
-    /// 控制可编辑性
-    void setEditable(const bool &editable);
+    /// 设置鼠标可移动航点
+    void setMoveable(bool movable);
     /// 设置航点可选中
-    void setCheckable(const bool &checkable);
+    void setCheckable(bool checkable);
     /// 设置航点被选中
     void setChecked(int index);
-    /// 当前选中的航点，-1为空
-    int checked() const;
+    void setChecked(MapObjectItem *point);
+    /// 设置航点选中互斥性
+    void setExclusive(bool exclusive);
     /// 设置编辑状态和非编辑状态下两种画笔
     void setPen(bool editable, const QPen &pen);
     /// 获取画笔
@@ -43,11 +44,18 @@ public:
     MapObjectItem *replace(const int &index, MapObjectItem *point);
     MapObjectItem *replace(const int &index, const QGeoCoordinate &coord);
     /// 删除航点
-    void remove(const int &index);
+    void remove(int index);
+    void remove(MapObjectItem *point);
     /// 设置航点
     const QVector<MapObjectItem*> &setPoints(const QVector<MapObjectItem*> &points);
     /// 获取航点列表
     const QVector<MapObjectItem*> &points() const;
+    /// 获取所有选中的航点
+    QVector<MapObjectItem*> checked() const;
+    /// 获取所有选中的航点下标
+    QVector<int> checkedIndex() const;
+    /// 获取下标
+    int indexOf(MapObjectItem *point);
 
 public:
     /// 获取所有的实例
@@ -64,16 +72,16 @@ private:
 
 private:
     void updatePolyline();
-    void updateByPointMove();
-    void checkByPointPress();
+    void updatePointMoved();
+    void updatePointChecked();
     void bindPoint(MapObjectItem *point);
 
 private:
     QPen m_normalPen;    ///< 非编辑状态画笔
-    QPen m_editablePen;  ///< 编辑状态画笔
-    bool m_editable;     ///< 鼠标是否可交互编辑
+    QPen m_moveablePen;  ///< 编辑状态画笔
+    bool m_moveable;     ///< 航点可移动
     bool m_checkable;    ///< 航点可选中性
-    int  m_checkedIndex; ///< 当前选中航点
+    bool m_exclusive;    ///< 航点选中互斥性
     //
     QVector<MapObjectItem*>   m_points;      ///< 航点元素
 };

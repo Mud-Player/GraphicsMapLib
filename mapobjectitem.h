@@ -9,7 +9,8 @@
  * \brief 地图对象
  * \details 可用于将图标添加到地图上
  * \note 1.该对象不受地图缩放影响，将会始终保持屏幕大小
- * 2.pressed、released、clicked需要打开可点击性
+ * 2.默认会阻断鼠标时间穿透到地图上，但是要想穿透鼠标事件请调用setAllowMouseEvent(false)
+ * 3.pressed信号总是可以收到
  */
 class GRAPHICSMAPLIB_EXPORT MapObjectItem : public QObject, public QGraphicsPixmapItem
 {
@@ -30,14 +31,16 @@ public:
     void setText(const QString &text, Qt::Alignment align = Qt::AlignCenter);
     /// 设置文字颜色
     void setTextColor(const QColor &color);
+    /// 设置是否允许鼠标事件，影响是否能够像QAbstractButton一样触发点击信号(但是可以收到press信号)
+    void setAllowMouseEvent(bool enable);
     /// 设置鼠标可拖拽
     void setMovable(bool movable);
-    /// 设置可点击
-    void setClickable(bool clickable);
     /// 设置选中性
     void setCheckable(bool checkable);
-    /// 设置为选中
+    /// 设置为选中(不会触发信号)
     void setChecked(bool checked);
+    /// 是否选中
+    bool isChecked() const;
 
 public:
     /// 获取所有的实例
@@ -67,9 +70,11 @@ private:
     QGraphicsEllipseItem    m_border;
     QGraphicsSimpleTextItem m_text;
     //
+    bool m_enableMouse = true;
     bool m_checkable = false;
-    bool m_clickable = false;
     bool m_checked = false;
+    //
+    QPoint m_pressPos;
 };
 
 #endif // MAPOBJECTITEM_H

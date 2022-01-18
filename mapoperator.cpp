@@ -6,6 +6,7 @@
 #include "maprangeringitem.h"
 #include "maptrailitem.h"
 #include "maplineitem.h"
+#include <QDebug>
 
 InteractiveMapOperator::InteractiveMapOperator(QObject *parent) : QObject(parent)
 {
@@ -159,63 +160,17 @@ MapObjectOperator::MapObjectOperator(QObject *parent) : InteractiveMapOperator(p
 {
 }
 
-void MapObjectOperator::edit(MapObjectItem *obj, MapRouteItem *route)
-{
-    m_object = obj;
-    m_route = route;
-}
-
-void MapObjectOperator::setObjectIcon(const QPixmap &pixmap)
-{
-    m_objectIcon = pixmap;
-}
-
-void MapObjectOperator::setWaypointIcon(const QPixmap &pixmap)
-{
-    m_waypointIcon = pixmap;
-}
-
 void MapObjectOperator::ready()
 {
-    m_object = nullptr;
-    m_route = nullptr;
-    m_finishRequested = false;
 }
 
 void MapObjectOperator::end()
 {
-    if(m_route)
-        m_route->setEditable(false);
-    m_object = nullptr;
-    m_route = nullptr;
-}
-
-bool MapObjectOperator::keyPressEvent(QKeyEvent *event)
-{
-    if(!m_object)
-        return false;
-    if(event->key() == Qt::Key_Backspace) {
-        m_route->remove(m_route->points().size()-1);
-    }
-    return false;
-}
-
-bool MapObjectOperator::mouseDoubleClickEvent(QMouseEvent *event)
-{
-    Q_UNUSED(event)
-    // the last point have been craeted since previous mouse release event
-    if(m_object) {
-        m_finishRequested = true;
-        emit completed();
-    }
-    return false;
 }
 
 bool MapObjectOperator::mousePressEvent(QMouseEvent *event)
 {
-    if(event->buttons() & Qt::RightButton) {
-        m_finishRequested = true;
-        emit completed();
+    if(!(event->buttons() & Qt::LeftButton)) {
         return false;
     }
     m_pressPos = event->pos();
@@ -224,48 +179,19 @@ bool MapObjectOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapObjectOperator::mouseReleaseEvent(QMouseEvent *event)
 {
-    // create end
-    if(m_finishRequested) {
-        m_finishRequested = false;
-        if(m_route)
-            m_route->setEditable(false);
-        m_route = nullptr;
-        m_object = nullptr;
-        return false;
-    }
     // do nothing
     if(m_pressPos != event->pos())
         return false;
-    // create begin or append
+
+    // create
     auto coord = m_map->toCoordinate(event->pos());
-    if(!m_object) { // create object only
-        m_object = new MapObjectItem;
-        if(!m_objectIcon.isNull()) {
-            m_object->setIcon(m_objectIcon);
-        }
-        m_scene->addItem(m_object);
-        m_object->setZValue(1);
-        m_object->setCoordinate(coord);
-        //
-        emit created(m_object);
-    }
-    else { // we need to set route for object
-        if(!m_route) { // create route
-            m_route = new MapRouteItem;
-            auto point = m_route->append(m_object->coordinate());
-            if(!m_waypointIcon.isNull()) {
-                point->setIcon(m_waypointIcon);
-            }
-            m_scene->addItem(m_route);
-            //
-            emit created(m_route);
-        }
-        // append coordinate for route
-        auto point = m_route->append(coord);
-        if(!m_waypointIcon.isNull()) {
-            point->setIcon(m_waypointIcon);
-        }
-    }
+    auto object = new MapObjectItem;
+    m_scene->addItem(object);
+    object->setZValue(1);
+    object->setCoordinate(coord);
+    //
+    emit created(object);
+    emit completed();
     return false;
 }
 
@@ -276,34 +202,43 @@ MapRouteOperator::MapRouteOperator(QObject *parent) : InteractiveMapOperator(par
 void MapRouteOperator::edit(MapRouteItem *item)
 {
     if(m_route) {
-        m_route->setEditable(false);
+        m_route->setMoveable(false);
         m_route->setCheckable(false);
     }
     m_route = item;
-    m_route->setEditable(true);
+    m_route->setMoveable(true);
     m_route->setCheckable(true);
+}
+
+void MapRouteOperator::setWaypointIcon(const QPixmap &pixmap)
+{
+    m_waypointIcon = pixmap;
 }
 
 void MapRouteOperator::ready()
 {
     m_route = nullptr;
     m_finishRequested = false;
+    m_isChecking = false;
 }
 
 void MapRouteOperator::end()
 {
     if(m_route)
-        m_route->setEditable(false);
+        m_route->setMoveable(false);
     m_route = nullptr;
+    m_isChecking = false;
 }
 
 bool MapRouteOperator::keyPressEvent(QKeyEvent *event)
 {
-
     if(!m_route)
         return false;
     if(event->key() == Qt::Key_Backspace) {
-        m_route->remove(m_route->checked());
+        auto points = m_route->checked();
+        for(auto point : points) {
+            m_route->remove(point);
+        }
     }
     return false;
 }
@@ -325,16 +260,32 @@ bool MapRouteOperator::mousePressEvent(QMouseEvent *event)
         return false;
     }
     m_pressPos = event->pos();
+    if(!m_route)
+        return false;
+
+    // check that if we clicked waypoint
+    auto mouseItems = m_map->items(event->pos());
+    auto routeItems = m_route->childItems();
+    m_isChecking = false;
+    for(auto item : mouseItems) {
+        // find MapObjectItem child
+        if(m_route->childItems().contains(item)) {
+            m_isChecking = true;
+            return false;   // the waypoint itself will process setChecked
+        }
+    }
     return false;
 }
 
 bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
 {
+    if(m_isChecking)
+        return false;
     // create end
     if(m_finishRequested) {
         m_finishRequested = false;
         if(m_route)
-            m_route->setEditable(false);
+            m_route->setMoveable(false);
             m_route->setCheckable(false);
         m_route = nullptr;
         emit finished();
@@ -349,17 +300,16 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
     if(!m_route) { // create route
         m_route = new MapRouteItem;
         m_scene->addItem(m_route);
-        m_route->setEditable(true);
+        m_route->setMoveable(true);
         m_route->setCheckable(true);
         //
         emit created(m_route);
     }
-    auto checked = m_route->checked();
-    if(checked < 0)
-        checked = -1;
+    auto checked = m_route->checkedIndex();
+    auto index = checked.isEmpty() ? -1 : checked.last();
     // append coordinate for route
-    m_route->insert(checked+1, coord);
-    m_route->setChecked(checked+1);
+    m_route->insert(index + 1, coord)->setIcon(m_waypointIcon);
+    m_route->setChecked(index + 1);
     return false;
 }
 MapRangeLineOperator::MapRangeLineOperator(QObject *parent) : InteractiveMapOperator(parent)

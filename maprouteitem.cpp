@@ -5,9 +5,9 @@
 QSet<MapRouteItem*> MapRouteItem::m_items;
 
 MapRouteItem::MapRouteItem() :
-    m_editable(false),
+    m_moveable(false),
     m_checkable(false),
-    m_checkedIndex(-1)
+    m_exclusive(true)
 {
     //
     m_normalPen = this->pen();
@@ -16,8 +16,8 @@ MapRouteItem::MapRouteItem() :
     m_normalPen.setCapStyle(Qt::RoundCap);
     m_normalPen.setJoinStyle(Qt::RoundJoin);
     m_normalPen.setColor(QColor::fromRgb(241, 196, 15));
-    m_editablePen = m_normalPen;
-    m_editablePen.setColor(m_normalPen.color().lighter(170));
+    m_moveablePen = m_normalPen;
+    m_moveablePen.setColor(m_normalPen.color().lighter(170));
     this->setPen(m_normalPen);
     //
     m_items.insert(this);
@@ -28,44 +28,51 @@ MapRouteItem::~MapRouteItem()
     m_items.remove(this);
 }
 
-void MapRouteItem::setEditable(const bool &editable)
+void MapRouteItem::setMoveable(bool movable)
 {
-    if(m_editable == editable)
+    if(m_moveable == movable)
         return;
-    m_editable = editable;
-
-    this->setPen(m_editable ? m_editablePen : m_normalPen);
-    for(auto &ctrlPoint : m_points) {
-        ctrlPoint->setMovable(editable);
+    m_moveable = movable;
+    for(auto point : m_points) {
+        point->setMovable(m_moveable);
+        this->setPen(m_moveable ? m_moveablePen : m_normalPen);
     }
 }
 
-void MapRouteItem::setCheckable(const bool &checkable)
+void MapRouteItem::setCheckable(bool checkable)
 {
     // make sure call setChecked before operator=
-    if(!checkable)
-        setChecked(-1);
+    if(m_checkable == checkable)
+        return;
     m_checkable = checkable;
 }
 
 void MapRouteItem::setChecked(int index)
 {
-    if(m_checkedIndex == index || !m_checkable)
+    if(!m_checkable)
         return;
-    auto prePoint = m_points.value(m_checkedIndex);
-    if(prePoint)
-        prePoint->setChecked(false);
-    auto curPoint = m_points.value(index);
-    if(m_checkable && curPoint)
-        curPoint->setChecked(true);
-    m_checkedIndex = index;
+    if(m_exclusive) {
+        for(auto point : m_points) {
+            point->setChecked(false);
+        }
+    }
+    m_points.at(index)->setChecked(true);
 }
 
-int MapRouteItem::checked() const
+void MapRouteItem::setChecked(MapObjectItem *point)
 {
-    return m_checkedIndex;
+    auto index = m_points.indexOf(point);
+    setChecked(index);
 }
 
+void MapRouteItem::setExclusive(bool exclusive)
+{
+    if(m_exclusive == exclusive)
+        return;
+    for(auto point : m_points) {
+        point->setChecked(false);
+    }
+}
 
 MapObjectItem* MapRouteItem::append(MapObjectItem *point)
 {
@@ -126,7 +133,7 @@ MapObjectItem *MapRouteItem::replace(const int &index, const QGeoCoordinate &coo
     return point;
 }
 
-void MapRouteItem::remove(const int &index)
+void MapRouteItem::remove(int index)
 {
     if(index <0 || index >= m_points.size())
         return;
@@ -135,6 +142,12 @@ void MapRouteItem::remove(const int &index)
     updatePolyline();
     //
     emit removed(index);
+}
+
+void MapRouteItem::remove(MapObjectItem *point)
+{
+    auto index = m_points.indexOf(point);
+    remove(index);
 }
 
 const QVector<MapObjectItem*> &MapRouteItem::setPoints(const QVector<MapObjectItem *> &points)
@@ -158,6 +171,33 @@ const QVector<MapObjectItem *> &MapRouteItem::points() const
     return m_points;
 }
 
+QVector<MapObjectItem *> MapRouteItem::checked() const
+{
+    QVector<MapObjectItem*> checked;
+    for(auto point : m_points) {
+        if(point->isChecked())
+            checked.append(point);
+    }
+    return checked;
+}
+
+QVector<int> MapRouteItem::checkedIndex() const
+{
+    QVector<int> checked;
+    for(int i = 0; i < m_points.size(); ++i) {
+        auto point = m_points.at(i);
+        if(!point->isChecked())
+            continue;
+        checked.append(i);
+    }
+    return checked;
+}
+
+int MapRouteItem::indexOf(MapObjectItem *point)
+{
+    return m_points.indexOf(point);
+}
+
 const QSet<MapRouteItem *> &MapRouteItem::items()
 {
     return m_items;
@@ -179,7 +219,7 @@ void MapRouteItem::updatePolyline()
     setPath(path);
 }
 
-void MapRouteItem::updateByPointMove()
+void MapRouteItem::updatePointMoved()
 {
     auto ctrlItem = dynamic_cast<MapObjectItem*>(sender());
     auto index = m_points.indexOf(ctrlItem);
@@ -189,19 +229,18 @@ void MapRouteItem::updateByPointMove()
     emit updated(index, point);
 }
 
-void MapRouteItem::checkByPointPress()
+void MapRouteItem::updatePointChecked()
 {
-    auto ctrlItem = dynamic_cast<MapObjectItem*>(sender());
-    auto index = m_points.indexOf(ctrlItem);
-    setChecked(index);
+    auto point = dynamic_cast<MapObjectItem*>(sender());
+    setChecked(point);
 }
 
 void MapRouteItem::bindPoint(MapObjectItem *point)
 {
     point->setParentItem(this);
-    point->setMovable(m_editable);
-    point->setCheckable(true);
-    point->setClickable(true);
-    connect(point, &MapObjectItem::pressed, this, &MapRouteItem::checkByPointPress);
-    connect(point, &MapObjectItem::coordinateChanged, this, &MapRouteItem::updateByPointMove);
+    point->setMovable(m_moveable);
+    point->setCheckable(m_checkable);
+    point->setAllowMouseEvent(false);   // which case only press event will be received
+    connect(point, &MapObjectItem::pressed, this, &MapRouteItem::updatePointChecked);
+    connect(point, &MapObjectItem::coordinateChanged, this, &MapRouteItem::updatePointMoved);
 }

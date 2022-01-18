@@ -68,7 +68,7 @@ private:
 
 /*!
  * \brief 图标对象创建操作器
- * \details 双击和右键完成单图标对象的创建，多次点击实现图标初始初始位置与移动路线的规划
+ * \details 左键单击完成单图标对象的创建
  */
 class GRAPHICSMAPLIB_EXPORT MapObjectOperator : public InteractiveMapOperator
 {
@@ -77,35 +77,17 @@ class GRAPHICSMAPLIB_EXPORT MapObjectOperator : public InteractiveMapOperator
 public:
     MapObjectOperator(QObject *parent = nullptr);
 
-    /// 编辑已经创建的对象(请确保被应用为操作器后再调用)
-    void edit(MapObjectItem *obj, MapRouteItem *route);
-
-    /// 设置对象的默认图标
-    void setObjectIcon(const QPixmap &pixmap);
-    /// 设置航点的默认图标
-    void setWaypointIcon(const QPixmap &pixmap);
-
 signals:
     void created(MapObjectItem *item);
-    void created(MapRouteItem *item);
 
 protected:
     virtual void ready() override;
     virtual void end() override;
-    virtual bool keyPressEvent(QKeyEvent *event) override;
-    virtual bool mouseDoubleClickEvent(QMouseEvent *event) override;
     virtual bool mousePressEvent(QMouseEvent *event) override;
     virtual bool mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-    bool           m_finishRequested;
     QPoint         m_pressPos;
-    //
-    MapObjectItem *m_object;
-    MapRouteItem  *m_route;
-    //
-    QPixmap  m_objectIcon;
-    QPixmap  m_waypointIcon;
 };
 
 /*!
@@ -120,6 +102,9 @@ public:
     MapRouteOperator(QObject *parent = nullptr);
     /// 编辑已经创建的航路(请确保被应用为操作器后再调用)
     void edit(MapRouteItem *item);
+
+    /// 设置航点的默认图标
+    void setWaypointIcon(const QPixmap &pixmap);
 
 signals:
     ///< 创建信号
@@ -136,10 +121,13 @@ protected:
     virtual bool mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-    bool           m_finishRequested;
-    QPoint         m_pressPos;
+    bool     m_finishRequested;
+    bool     m_isChecking;  ///< 点中了一个航点
+    QPoint   m_pressPos;
     //
     MapRouteItem  *m_route = nullptr;
+    //
+    QPixmap  m_waypointIcon;
 };
 
 

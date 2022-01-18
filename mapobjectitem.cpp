@@ -160,15 +160,15 @@ void MapObjectItem::setTextColor(const QColor &color)
     m_text.setPen(color);
 }
 
+void MapObjectItem::setAllowMouseEvent(bool enable)
+{
+    m_enableMouse = enable;
+}
+
 void MapObjectItem::setMovable(bool movable)
 {
     this->setFlag(QGraphicsItem::ItemIsMovable, movable);
     this->setAcceptHoverEvents(movable);
-}
-
-void MapObjectItem::setClickable(bool clickable)
-{
-    m_clickable = clickable;
 }
 
 void MapObjectItem::setCheckable(bool checkable)
@@ -196,6 +196,11 @@ void MapObjectItem::setChecked(bool checked)
     }
 }
 
+bool MapObjectItem::isChecked() const
+{
+    return m_checked;
+}
+
 const QSet<MapObjectItem *> &MapObjectItem::items()
 {
     return m_items;
@@ -215,43 +220,44 @@ QVariant MapObjectItem::itemChange(QGraphicsItem::GraphicsItemChange change, con
 
 void MapObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
+    QGraphicsPixmapItem::hoverEnterEvent(event);
     if(this->flags() & QGraphicsItem::ItemIsMovable) {
         this->setScale(1.2);
         this->setCursor(Qt::DragMoveCursor);
     }
-    return QGraphicsPixmapItem::hoverEnterEvent(event);
 }
 
 void MapObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
+    QGraphicsPixmapItem::hoverEnterEvent(event);
     if(this->flags() & QGraphicsItem::ItemIsMovable) {
-        this->setScale(1.0);
+        this->setScale(1.1);
         this->setCursor(Qt::ArrowCursor);
     }
-    return QGraphicsPixmapItem::hoverEnterEvent(event);
 }
 
 void MapObjectItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsPixmapItem::mousePressEvent(event);
-    if(m_clickable) {
-        emit pressed();
+    if(m_enableMouse)
         event->accept();
-    }
+    // else will no longer propagate event to mouseMoveEvent and mouseReleaseEvent
+    m_pressPos = event->screenPos();
+    emit pressed();
 }
 
 void MapObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsPixmapItem::mouseReleaseEvent(event);
-    // We assume that m_clickable is true, else we can't be called
-    if(this->contains(event->pos())) {
-        if(m_checkable) {
-            setChecked(!m_checked);
-            emit toggled(m_checked);
-        }
-        emit released();
-        emit clicked(m_checked);
+    // QGraphicsItem::ItemIsMovable will case the function be called
+    if(!m_enableMouse)
+        return;
+    // if moved some distance, we ignore switch-check
+    if(m_checkable && ((m_pressPos-event->screenPos()).manhattanLength() < 3)
+            && this->contains(event->pos())) {
+        setChecked(!m_checked);
+        emit toggled(m_checked);
     }
-    else
-        emit released();
+    emit released();
+    emit clicked(m_checked);
 }
