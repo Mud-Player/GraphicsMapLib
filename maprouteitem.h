@@ -26,8 +26,11 @@ public:
     /// 设置航点可选中
     void setCheckable(bool checkable);
     /// 设置航点被选中
-    void setChecked(int index);
-    void setChecked(MapObjectItem *point);
+    void setChecked(int index, bool checked = true);
+    void setChecked(MapObjectItem *point, bool checked = true);
+    /// 切换航点选中状态
+    void toggle(int index);
+    void toggle(MapObjectItem *point);
     /// 设置航点选中互斥性
     void setExclusive(bool exclusive);
     /// 设置编辑状态和非编辑状态下两种画笔
@@ -73,7 +76,8 @@ private:
 private:
     void updatePolyline();
     void updatePointMoved();
-    void updatePointChecked();
+    void updatePointPressed();
+    void updatePointReleased();
     void bindPoint(MapObjectItem *point);
 
 private:
@@ -83,7 +87,8 @@ private:
     bool m_checkable;    ///< 航点可选中性
     bool m_exclusive;    ///< 航点选中互斥性
     //
-    QVector<MapObjectItem*>   m_points;      ///< 航点元素
+    QVector<MapObjectItem*> m_points;               ///< 航点元素
+    bool                    m_lastPointIsChecked;   ///< 上次触发按钮的选中状态
 };
 
 #endif // MAPROUTEITEM_H

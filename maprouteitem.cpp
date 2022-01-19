@@ -47,30 +47,45 @@ void MapRouteItem::setCheckable(bool checkable)
     m_checkable = checkable;
 }
 
-void MapRouteItem::setChecked(int index)
+void MapRouteItem::setChecked(int index, bool checked)
 {
     if(!m_checkable)
         return;
-    if(m_exclusive) {
+    if(m_exclusive && checked) {
         for(auto point : m_points) {
             point->setChecked(false);
         }
     }
-    m_points.at(index)->setChecked(true);
+    m_points.at(index)->setChecked(checked);
 }
 
-void MapRouteItem::setChecked(MapObjectItem *point)
+void MapRouteItem::setChecked(MapObjectItem *point, bool checked)
 {
     auto index = m_points.indexOf(point);
-    setChecked(index);
+    setChecked(index, checked);
+}
+
+void MapRouteItem::toggle(int index)
+{
+    auto state = m_points.at(index)->isChecked();
+    setChecked(index, !state);
+}
+
+void MapRouteItem::toggle(MapObjectItem *point)
+{
+    auto index = m_points.indexOf(point);
+    toggle(index);
 }
 
 void MapRouteItem::setExclusive(bool exclusive)
 {
     if(m_exclusive == exclusive)
         return;
-    for(auto point : m_points) {
-        point->setChecked(false);
+    m_exclusive = exclusive;
+    if(m_exclusive) {
+        for(auto point : m_points) {
+            point->setChecked(false);
+        }
     }
 }
 
@@ -229,10 +244,17 @@ void MapRouteItem::updatePointMoved()
     emit updated(index, point);
 }
 
-void MapRouteItem::updatePointChecked()
+void MapRouteItem::updatePointPressed()
+{
+    m_lastPointIsChecked = dynamic_cast<MapObjectItem*>(sender())->isChecked();
+}
+
+void MapRouteItem::updatePointReleased()
 {
     auto point = dynamic_cast<MapObjectItem*>(sender());
-    setChecked(point);
+    bool isChecekd = point->isChecked();
+    if(m_lastPointIsChecked != isChecekd && isChecekd)
+        setChecked(point, true);
 }
 
 void MapRouteItem::bindPoint(MapObjectItem *point)
@@ -240,7 +262,8 @@ void MapRouteItem::bindPoint(MapObjectItem *point)
     point->setParentItem(this);
     point->setMovable(m_moveable);
     point->setCheckable(m_checkable);
-    point->setAllowMouseEvent(false);   // which case only press event will be received
-    connect(point, &MapObjectItem::pressed, this, &MapRouteItem::updatePointChecked);
+    point->setAllowMouseEvent(true);
+    connect(point, &MapObjectItem::pressed, this, &MapRouteItem::updatePointPressed);
+    connect(point, &MapObjectItem::released, this, &MapRouteItem::updatePointReleased);
     connect(point, &MapObjectItem::coordinateChanged, this, &MapRouteItem::updatePointMoved);
 }

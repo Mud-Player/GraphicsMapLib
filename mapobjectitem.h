@@ -37,8 +37,10 @@ public:
     void setMovable(bool movable);
     /// 设置选中性
     void setCheckable(bool checkable);
-    /// 设置为选中(不会触发信号)
+    /// 设置选中状态(不会触发信号)
     void setChecked(bool checked);
+    /// 切换选中状态(不会触发信号)
+    void toggle();
     /// 是否选中
     bool isChecked() const;
 

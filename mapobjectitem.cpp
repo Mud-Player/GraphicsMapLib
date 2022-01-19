@@ -196,6 +196,11 @@ void MapObjectItem::setChecked(bool checked)
     }
 }
 
+void MapObjectItem::toggle()
+{
+    setChecked(!m_checked);
+}
+
 bool MapObjectItem::isChecked() const
 {
     return m_checked;
