@@ -58,6 +58,7 @@ MapObjectItem::MapObjectItem(const QGeoCoordinate &coord)
 {
     auto font = m_text.font();
     font.setFamily("Microsoft YaHei");
+    font.setPointSize(10);
     m_text.setFont(font);
     m_text.setBrush(Qt::black);
     m_text.setParentItem(this);
@@ -158,6 +159,7 @@ void MapObjectItem::setText(const QString &text, Qt::Alignment align)
 void MapObjectItem::setTextColor(const QColor &color)
 {
     m_text.setPen(color);
+    m_text.setBrush(color);
 }
 
 void MapObjectItem::setAllowMouseEvent(bool enable)
@@ -165,7 +167,7 @@ void MapObjectItem::setAllowMouseEvent(bool enable)
     m_enableMouse = enable;
 }
 
-void MapObjectItem::setMovable(bool movable)
+void MapObjectItem::setMoveable(bool movable)
 {
     this->setFlag(QGraphicsItem::ItemIsMovable, movable);
     this->setAcceptHoverEvents(movable);

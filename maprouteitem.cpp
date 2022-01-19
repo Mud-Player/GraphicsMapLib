@@ -34,7 +34,7 @@ void MapRouteItem::setMoveable(bool movable)
         return;
     m_moveable = movable;
     for(auto point : m_points) {
-        point->setMovable(m_moveable);
+        point->setMoveable(m_moveable);
     }
     this->setPen(m_moveable ? m_moveablePen : m_normalPen);
 }
@@ -264,7 +264,7 @@ void MapRouteItem::updatePointReleased()
 void MapRouteItem::bindPoint(MapObjectItem *point)
 {
     point->setParentItem(this);
-    point->setMovable(m_moveable);
+    point->setMoveable(m_moveable);
     point->setCheckable(m_checkable);
     point->setAllowMouseEvent(true);
     connect(point, &MapObjectItem::pressed, this, &MapRouteItem::updatePointPressed);
