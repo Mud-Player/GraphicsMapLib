@@ -35,8 +35,8 @@ void MapRouteItem::setMoveable(bool movable)
     m_moveable = movable;
     for(auto point : m_points) {
         point->setMovable(m_moveable);
-        this->setPen(m_moveable ? m_moveablePen : m_normalPen);
     }
+    this->setPen(m_moveable ? m_moveablePen : m_normalPen);
 }
 
 void MapRouteItem::setCheckable(bool checkable)
@@ -45,10 +45,9 @@ void MapRouteItem::setCheckable(bool checkable)
     if(m_checkable == checkable)
         return;
     m_checkable = checkable;
-    if(!checkable) {
-        for(auto point : m_points) {
-            point->setCheckable(false);
-        }
+    for(auto point : m_points) {
+        point->setAllowMouseEvent(m_checkable);
+        point->setCheckable(m_checkable);
     }
 }
 
