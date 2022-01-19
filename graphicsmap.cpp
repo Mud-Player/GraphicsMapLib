@@ -144,7 +144,7 @@ QGeoCoordinate GraphicsMap::toCoordinate(const QPointF &point)
     auto radLon = point.x() * 2 * M_PI/ SCENE_LEN;
     auto radLat = 2 * qAtan(qPow(M_E, 2*M_PI*point.y()/SCENE_LEN)) - M_PI_2;
     // NOTO: as for Qt, it's y asscending from up to bottom
-    return  {qRadiansToDegrees(-radLat), qRadiansToDegrees(radLon)};
+    return  {qRadiansToDegrees(-radLat), qRadiansToDegrees(radLon), 0};
 }
 
 /// \see https://blog.csdn.net/iispring/article/details/8565177
