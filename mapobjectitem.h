@@ -31,7 +31,7 @@ public:
     void setText(const QString &text, Qt::Alignment align = Qt::AlignCenter);
     /// 设置文字颜色
     void setTextColor(const QColor &color);
-    /// 设置是否允许鼠标事件，影响是否能够像QAbstractButton一样触发点击信号(但是可以收到press信号)
+    /// 设置是否允许鼠标事件，影响是否能够像QAbstractButton一样触发点击信号(但是可以收到press信号)以及切换选中状态
     void setAllowMouseEvent(bool enable);
     /// 设置鼠标可拖拽
     void setMovable(bool movable);
