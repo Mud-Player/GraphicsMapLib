@@ -45,6 +45,11 @@ void MapRouteItem::setCheckable(bool checkable)
     if(m_checkable == checkable)
         return;
     m_checkable = checkable;
+    if(!checkable) {
+        for(auto point : m_points) {
+            point->setCheckable(false);
+        }
+    }
 }
 
 void MapRouteItem::setChecked(int index, bool checked)

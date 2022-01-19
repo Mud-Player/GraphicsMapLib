@@ -244,13 +244,13 @@ bool MapRouteOperator::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_UNUSED(event)
     // the last point have been craeted since previous mouse release event
+    // complete
     if(m_route) {
         m_route->setMoveable(false);
         m_route->setCheckable(false);
     }
     m_route = nullptr;
     emit completed();
-    return false;
     return false;
 }
 
