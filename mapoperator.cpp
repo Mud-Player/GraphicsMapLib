@@ -222,8 +222,10 @@ void MapRouteOperator::ready()
 
 void MapRouteOperator::end()
 {
-    if(m_route)
+    if(m_route) {
         m_route->setMoveable(false);
+        m_route->setCheckable(false);
+    }
     m_route = nullptr;
 }
 
@@ -263,8 +265,8 @@ bool MapRouteOperator::mousePressEvent(QMouseEvent *event)
             m_route->setCheckable(false);
         }
         m_route = nullptr;
-        emit completed();
         ignoreMouseEventLoop();
+        emit completed();
         return false;
     }
     m_pressPos = event->pos();

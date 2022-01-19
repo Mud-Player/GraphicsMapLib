@@ -18,11 +18,12 @@ InteractiveMap::InteractiveMap(QWidget *parent) : GraphicsMap(parent),
 
 void InteractiveMap::setOperator(InteractiveMapOperator *op)
 {
-    if(op == m_operator)
-        return;
     // process end funtion with previos operator
-    if(m_operator)
+    if(m_operator) {
         m_operator->end();
+        m_operator->m_ignoreKeyEventLoop = false;
+        m_operator->m_ignoreMouseEventLoop = false;
+    }
 
     m_operator = op;
     if(!m_operator)
