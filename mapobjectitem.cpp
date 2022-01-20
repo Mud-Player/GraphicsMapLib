@@ -218,10 +218,6 @@ QVariant MapObjectItem::itemChange(QGraphicsItem::GraphicsItemChange change, con
    if(change == ItemRotationHasChanged) {
        emit rotationChanged(this->rotation());
    }
-   else if(change == ItemPositionHasChanged) {
-       m_coord = GraphicsMap::toCoordinate(value.toPointF());
-       emit coordinateChanged(m_coord);
-   }
    return QGraphicsPixmapItem::itemChange(change, value);
 }
 
@@ -251,6 +247,14 @@ void MapObjectItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     // else will no longer propagate event to mouseMoveEvent and mouseReleaseEvent
     m_pressPos = event->screenPos();
     emit pressed();
+}
+
+void MapObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsPixmapItem::mouseMoveEvent(event);
+
+    m_coord = GraphicsMap::toCoordinate(this->scenePos());
+    emit coordinateDragged(m_coord);
 }
 
 void MapObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)

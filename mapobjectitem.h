@@ -54,7 +54,8 @@ signals:
     void released();
     void toggled(bool checked);
     void coordinateChanged(const QGeoCoordinate &coord);
-    void rotationChanged(const qreal &degree);
+    void coordinateDragged(const QGeoCoordinate &coord);
+    void rotationChanged(qreal degree);
 
 protected:
     /// 获取rotation信号和移动信号
@@ -62,6 +63,7 @@ protected:
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
