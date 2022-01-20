@@ -269,5 +269,5 @@ void MapRouteItem::bindPoint(MapObjectItem *point)
     point->setAllowMouseEvent(true);
     connect(point, &MapObjectItem::pressed, this, &MapRouteItem::updatePointPressed);
     connect(point, &MapObjectItem::released, this, &MapRouteItem::updatePointReleased);
-    connect(point, &MapObjectItem::coordinateChanged, this, &MapRouteItem::updatePointMoved);
+    connect(point, &MapObjectItem::coordinateDragged, this, &MapRouteItem::updatePointMoved);
 }
