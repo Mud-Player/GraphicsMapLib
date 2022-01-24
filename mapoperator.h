@@ -10,6 +10,7 @@ class MapObjectItem;
 class MapRangeRingItem;
 class MapTrailItem;
 class MapLineItem;
+class MapRectItem;
 
 /*!
  * \brief 圆形创建操作器
@@ -156,5 +157,33 @@ private:
 	MapLineItem  *m_line;
 	bool         m_ignoreEvent;
 };
+
+/*!
+ * \brief 矩形创建操作器
+ * \details 右键、双击完成创建
+ */
+class GRAPHICSMAPLIB_EXPORT MapRectOperator : public InteractiveMapOperator
+{
+    Q_OBJECT
+
+public:
+    MapRectOperator(QObject *parent = nullptr);
+
+signals:
+    void created(MapRectItem *item);
+
+protected:
+    virtual void ready() override;
+    virtual void end() override;
+    virtual bool mousePressEvent(QMouseEvent *event) override;
+    virtual bool mouseReleaseEvent(QMouseEvent *event) override;
+    virtual bool mouseMoveEvent(QMouseEvent *event) override;
+
+private:
+    bool            m_ignoreEvent;
+    QGeoCoordinate  m_first;
+    MapRectItem *m_rect;
+};
+
 
 #endif // MAPOPERATOR_H

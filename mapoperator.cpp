@@ -6,6 +6,7 @@
 #include "maprangeringitem.h"
 #include "maptrailitem.h"
 #include "maplineitem.h"
+#include "maprectitem.h"
 #include <QDebug>
 
 InteractiveMapOperator::InteractiveMapOperator(QObject *parent) : QObject(parent)
@@ -376,4 +377,78 @@ bool MapRangeLineOperator::mouseMoveEvent(QMouseEvent *event)
 	// so we should to return false that helps up to zooming on cursor,
 	// and map will not be moved by cursor move
 	return false;
+}
+
+MapRectOperator::MapRectOperator(QObject *parent)
+{
+
+}
+
+void MapRectOperator::ready()
+{
+    m_rect = nullptr;
+}
+
+void MapRectOperator::end()
+{
+    if(m_rect)
+        m_rect->setEditable(false);
+}
+
+bool MapRectOperator::mousePressEvent(QMouseEvent *event)
+{
+    // Ignore the event whec click on the control point
+    if(auto ctrlPoint = dynamic_cast<QGraphicsRectItem*>(m_map->itemAt(event->pos()))) {
+        auto cast = dynamic_cast<MapRectItem*>(ctrlPoint->parentItem());
+        if(MapRectItem::items().contains(cast)) {
+            m_ignoreEvent = true;
+            return false;
+        }
+    }
+
+    // unset editable for previous created item
+    if(m_rect)
+        m_rect->setEditable(false);
+
+    //
+    m_ignoreEvent = false;
+    m_rect = new MapRectItem;
+    m_scene->addItem(m_rect);
+    m_first  = m_map->toCoordinate(event->pos());
+    m_rect->setRect(m_first, m_first);
+    m_rect->setEditable(true);
+    //
+    emit created(m_rect);
+    return true;
+}
+
+bool MapRectOperator::mouseReleaseEvent(QMouseEvent *event)
+{
+    if(m_ignoreEvent)
+        return false;
+    auto second =  m_map->toCoordinate(event->pos());
+    // Check that if the two point is too close, we should delete such an rect
+    auto point0 = m_map->toPoint(m_first);
+    auto point1 = m_map->toPoint(second);
+    if((point0 - point1).manhattanLength() < 50) {
+        delete m_rect;
+        m_rect = nullptr;
+        return true;
+    }
+    m_rect->setRect(m_first, second);
+    emit completed();
+
+    return true;
+}
+
+bool MapRectOperator::mouseMoveEvent(QMouseEvent *event)
+{
+    if(m_ignoreEvent)
+        return false;
+    auto second =  m_map->toCoordinate(event->pos());
+    m_rect->setRect(m_first, second);
+    // Press Event didn't propagte to QGraphicsView ,
+    // so we should to return false that helps up to zooming on cursor,
+    // and map will not be moved by cursor move
+    return false;
 }
