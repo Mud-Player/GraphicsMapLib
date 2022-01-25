@@ -18,6 +18,7 @@ MapPolygonItem::MapPolygonItem() :
     this->setPen(pen);
     //
     m_items.insert(this);
+    updateEditable();
 }
 
 MapPolygonItem::~MapPolygonItem()
