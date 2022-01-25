@@ -35,7 +35,7 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
     if(auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(m_map->itemAt(event->pos()))) {
         auto cast = dynamic_cast<MapEllipseItem*>(ctrlPoint->parentItem());
         if(MapEllipseItem::items().contains(cast)) {
-            m_ignoreEvent = true;
+            ignoreMouseEventLoop();
             return false;
         }
     }
@@ -45,7 +45,6 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
         m_ellipse->setEditable(false);
 
     //
-    m_ignoreEvent = false;
     m_ellipse = new MapEllipseItem;
     m_scene->addItem(m_ellipse);
     m_first  = m_map->toCoordinate(event->pos());
@@ -58,8 +57,6 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(m_ignoreEvent)
-        return false;
     auto second =  m_map->toCoordinate(event->pos());
     // Check that if the two point is too close, we should delete such an ellipse
     auto point0 = m_map->toPoint(m_first);
@@ -75,8 +72,6 @@ bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
 
 bool MapEllipseOperator::mouseMoveEvent(QMouseEvent *event)
 {
-    if(m_ignoreEvent)
-        return false;
     auto second =  m_map->toCoordinate(event->pos());
     m_ellipse->setRect(m_first, second);
     // Press Event didn't propagte to QGraphicsView ,
@@ -318,7 +313,6 @@ MapRangeLineOperator::MapRangeLineOperator(QObject *parent) : InteractiveMapOper
 void MapRangeLineOperator::ready()
 {
 	m_line = nullptr;
-	m_ignoreEvent = false;
 }
 
 void MapRangeLineOperator::end()
@@ -328,39 +322,37 @@ void MapRangeLineOperator::end()
 
 bool MapRangeLineOperator::mousePressEvent(QMouseEvent *event)
 {
-    if (event->buttons() & Qt::LeftButton) {
-		m_pressFirstPos = event->pos();
+    if (!(event->buttons() & Qt::LeftButton)) {
+        ignoreMouseEventLoop();
+        return false;
+    }
 
-		if (!m_line) { // create route
-			m_line = new MapLineItem;
-			m_scene->addItem(m_line);
-			m_line->setStartPoint(m_map->toCoordinate(event->pos()));
-            m_line->setStartIcon(QPixmap(":/Resources/location.png"), Qt::AlignHCenter | Qt::AlignTop);
-            m_line->setEndIcon(QPixmap(":/Resources/location.png"), Qt::AlignHCenter | Qt::AlignTop);
-			//
-			emit created(m_line);
-			m_ignoreEvent = false;
-		}
-		return true;
-	}
+    m_pressFirstPos = event->pos();
+    if (!m_line) { // create route
+        m_line = new MapLineItem;
+        m_scene->addItem(m_line);
+        m_line->setStartPoint(m_map->toCoordinate(event->pos()));
+        m_line->setStartIcon(QPixmap(":/Resources/location.png"), Qt::AlignHCenter | Qt::AlignTop);
+        m_line->setEndIcon(QPixmap(":/Resources/location.png"), Qt::AlignHCenter | Qt::AlignTop);
+        //
+        emit created(m_line);
+        return true;
+    }
 	return false;
 }
 
 bool MapRangeLineOperator::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_UNUSED(event)
-	if (m_line) { // delete line
-		m_ignoreEvent = true;
+    if (m_line) {
 		m_line = nullptr;
-		return true;
+        return false;
 	}
 	return false;
 }
 
 bool MapRangeLineOperator::mouseMoveEvent(QMouseEvent *event)
 {
-	if (m_ignoreEvent)
-		return false;
 	auto second = m_map->toCoordinate(event->pos());
 	m_line->setEndPoint(second);
     double dis = m_line->endings().first.distanceTo(m_line->endings().second);
@@ -379,7 +371,7 @@ bool MapRangeLineOperator::mouseMoveEvent(QMouseEvent *event)
 	return false;
 }
 
-MapRectOperator::MapRectOperator(QObject *parent)
+MapRectOperator::MapRectOperator(QObject *parent) : InteractiveMapOperator(parent)
 {
 
 }
@@ -401,7 +393,7 @@ bool MapRectOperator::mousePressEvent(QMouseEvent *event)
     if(auto ctrlPoint = dynamic_cast<QGraphicsRectItem*>(m_map->itemAt(event->pos()))) {
         auto cast = dynamic_cast<MapRectItem*>(ctrlPoint->parentItem());
         if(MapRectItem::items().contains(cast)) {
-            m_ignoreEvent = true;
+            ignoreMouseEventLoop();
             return false;
         }
     }
@@ -411,7 +403,6 @@ bool MapRectOperator::mousePressEvent(QMouseEvent *event)
         m_rect->setEditable(false);
 
     //
-    m_ignoreEvent = false;
     m_rect = new MapRectItem;
     m_scene->addItem(m_rect);
     m_first  = m_map->toCoordinate(event->pos());
@@ -424,8 +415,6 @@ bool MapRectOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapRectOperator::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(m_ignoreEvent)
-        return false;
     auto second =  m_map->toCoordinate(event->pos());
     // Check that if the two point is too close, we should delete such an rect
     auto point0 = m_map->toPoint(m_first);
@@ -443,8 +432,6 @@ bool MapRectOperator::mouseReleaseEvent(QMouseEvent *event)
 
 bool MapRectOperator::mouseMoveEvent(QMouseEvent *event)
 {
-    if(m_ignoreEvent)
-        return false;
     auto second =  m_map->toCoordinate(event->pos());
     m_rect->setRect(m_first, second);
     // Press Event didn't propagte to QGraphicsView ,

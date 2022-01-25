@@ -7,6 +7,7 @@
 QSet<MapEllipseItem*> MapEllipseItem::m_items;
 
 MapEllipseItem::MapEllipseItem():
+    m_editable(false),
     m_center(0,0),
     m_size(1e3, 1e3)
 {
@@ -41,6 +42,7 @@ MapEllipseItem::MapEllipseItem():
     m_secondCtrl.setCursor(Qt::DragMoveCursor);
     //
     m_items.insert(this);
+    updateEditable();
 }
 
 MapEllipseItem::~MapEllipseItem()

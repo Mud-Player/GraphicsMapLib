@@ -34,7 +34,6 @@ protected:
     virtual bool mouseMoveEvent(QMouseEvent *event) override;
 
 private:
-    bool            m_ignoreEvent;
     QGeoCoordinate  m_first;
     MapEllipseItem *m_ellipse;
 };
@@ -155,7 +154,6 @@ private:
 	QPoint       m_pressFirstPos;
 	//
 	MapLineItem  *m_line;
-	bool         m_ignoreEvent;
 };
 
 /*!
