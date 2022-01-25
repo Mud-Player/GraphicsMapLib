@@ -182,7 +182,7 @@ bool MapRectItem::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
         auto topLeftPoint = QPointF(left, top);
         auto bottomRightPoint = QPointF(right, bottom);
         m_rectCtrl.setRect({topLeftPoint, bottomRightPoint});
-        //QGraphicsRectItem::setRect({topLeftPoint, bottomRightPoint});
+        QGraphicsRectItem::setRect({topLeftPoint, bottomRightPoint});
         //
         emit centerChanged(m_center);
         emit sizeChanged(m_size);

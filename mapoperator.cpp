@@ -390,7 +390,7 @@ void MapRectOperator::end()
 bool MapRectOperator::mousePressEvent(QMouseEvent *event)
 {
     // Ignore the event whec click on the control point
-    if(auto ctrlPoint = dynamic_cast<QGraphicsRectItem*>(m_map->itemAt(event->pos()))) {
+    if(auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(m_map->itemAt(event->pos()))) {
         auto cast = dynamic_cast<MapRectItem*>(ctrlPoint->parentItem());
         if(MapRectItem::items().contains(cast)) {
             ignoreMouseEventLoop();
