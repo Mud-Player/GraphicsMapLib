@@ -20,9 +20,9 @@ void InteractiveMap::setOperator(InteractiveMapOperator *op)
 {
     // process end funtion with previos operator
     if(m_operator) {
-        m_operator->end();
-        m_operator->m_ignoreKeyEventLoop = false;
-        m_operator->m_ignoreMouseEventLoop = false;
+        unsetOperator();
+        if(m_operator->isTransient())
+            disconnect(m_operator, &InteractiveMapOperator::completed, this, &InteractiveMap::unsetOperator);
     }
 
     m_operator = op;
@@ -31,8 +31,19 @@ void InteractiveMap::setOperator(InteractiveMapOperator *op)
     //
     m_operator->setScene(this->scene());
     m_operator->setMap(this);
+    if(m_operator->isTransient())
+        connect(m_operator, &InteractiveMapOperator::completed, this, &InteractiveMap::unsetOperator);
+
     // process ready funtion with newlly operator
     op->ready();
+}
+
+void InteractiveMap::unsetOperator()
+{
+    m_operator->end();
+    m_operator->m_ignoreKeyEventLoop = false;
+    m_operator->m_ignoreMouseEventLoop = false;
+    m_operator = nullptr;
 }
 
 void InteractiveMap::setCenter(const MapObjectItem *obj)

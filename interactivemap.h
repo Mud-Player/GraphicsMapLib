@@ -28,8 +28,9 @@ public:
     template<class T>
     void clearMapItem();
 
-    /// 设置事件交互操作器，传nullptr可以取消设置
+    /// 设置事件交互操作器
     void setOperator(InteractiveMapOperator *op = nullptr);
+    void unsetOperator();
     /// 保持对象居中，传空值可以取消设置
     void setCenter(const MapObjectItem *obj);
     /// 设置鼠标是否可以交互缩放
@@ -80,6 +81,11 @@ class GRAPHICSMAPLIB_EXPORT InteractiveMapOperator : public QObject
     friend InteractiveMap;
 public:
     InteractiveMapOperator(QObject *parent = nullptr);
+
+    /// 设置是否为瞬态操作器，当其completed之后将会自动被地图取消
+    inline void setTransient(bool transient) { m_transient = transient;};
+    inline bool isTransient() const {return m_transient;}
+
     inline QGraphicsScene *scene() const {return m_scene;};
     inline GraphicsMap *map() const {return m_map;};
     inline bool isIgnoreKeyEventLoop() const {return m_ignoreKeyEventLoop;}
@@ -117,6 +123,7 @@ protected:
 private:
     bool m_ignoreKeyEventLoop = false;
     bool m_ignoreMouseEventLoop = false;
+    bool m_transient = false;    ///< 操作器瞬态
 };
 
 #endif // INTERACTIVEMAP_H

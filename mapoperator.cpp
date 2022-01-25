@@ -31,6 +31,17 @@ void MapEllipseOperator::end()
 
 bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
 {
+    // completed
+    if(event->buttons() & Qt::RightButton) {
+        ignoreMouseEventLoop();
+        if(m_ellipse) {
+            m_ellipse->setEditable(false);
+            m_ellipse = nullptr;
+        }
+        emit completed();
+        return false;
+    }
+
     // Ignore the event whec click on the control point
     if(auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(m_map->itemAt(event->pos()))) {
         auto cast = dynamic_cast<MapEllipseItem*>(ctrlPoint->parentItem());
