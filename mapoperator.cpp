@@ -18,6 +18,11 @@ MapEllipseOperator::MapEllipseOperator(QObject *parent) : InteractiveMapOperator
 {
 }
 
+void MapEllipseOperator::edit(MapEllipseItem *item)
+{
+    m_ellipse = item;
+}
+
 void MapEllipseOperator::ready()
 {
     m_ellipse = nullptr;
@@ -94,6 +99,11 @@ bool MapEllipseOperator::mouseMoveEvent(QMouseEvent *event)
 MapPolygonOperator::MapPolygonOperator(QObject *parent) : InteractiveMapOperator(parent)
 {
 
+}
+
+void MapPolygonOperator::edit(MapPolygonItem *item)
+{
+    m_polygon = item;
 }
 
 void MapPolygonOperator::ready()
@@ -385,6 +395,11 @@ bool MapRangeLineOperator::mouseMoveEvent(QMouseEvent *event)
 MapRectOperator::MapRectOperator(QObject *parent) : InteractiveMapOperator(parent)
 {
 
+}
+
+void MapRectOperator::edit(MapRectItem *item)
+{
+    m_rect = item;
 }
 
 void MapRectOperator::ready()
