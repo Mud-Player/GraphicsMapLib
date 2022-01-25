@@ -133,6 +133,16 @@ void MapEllipseItem::setRect(const QGeoCoordinate &first, const QGeoCoordinate &
     emit sizeChanged(m_size);
 }
 
+const QGeoCoordinate &MapEllipseItem::center() const
+{
+    return m_center;
+}
+
+const QSizeF &MapEllipseItem::size() const
+{
+    return m_size;
+}
+
 const QSet<MapEllipseItem *> &MapEllipseItem::items()
 {
     return m_items;

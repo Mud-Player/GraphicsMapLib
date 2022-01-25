@@ -133,6 +133,16 @@ void MapRectItem::setRect(const QGeoCoordinate &first, const QGeoCoordinate &sec
     emit sizeChanged(m_size);
 }
 
+const QGeoCoordinate &MapRectItem::center() const
+{
+    return m_center;
+}
+
+const QSizeF &MapRectItem::size() const
+{
+    return m_size;
+}
+
 const QSet<MapRectItem *> &MapRectItem::items()
 {
     return m_items;
