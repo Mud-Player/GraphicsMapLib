@@ -2,6 +2,7 @@
 #define MAPOBJECTITEM_H
 
 #include "GraphicsMapLib_global.h"
+#include "maprouteitem.h"
 #include <QGraphicsPixmapItem>
 #include <QGeoCoordinate>
 
@@ -43,6 +44,9 @@ public:
     void toggle();
     /// 是否选中
     bool isChecked() const;
+    /// 绑定的航线信息
+    void setRoute(MapRouteItem *route);
+    MapRouteItem *route() const;
 
 public:
     /// 获取所有的实例
@@ -56,6 +60,7 @@ signals:
     void coordinateChanged(const QGeoCoordinate &coord);
     void coordinateDragged(const QGeoCoordinate &coord);
     void rotationChanged(qreal degree);
+    void routeChanged(MapRouteItem *route);
 
 protected:
     /// 获取rotation信号和移动信号
@@ -73,6 +78,7 @@ private:
     QGeoCoordinate          m_coord;
     QGraphicsEllipseItem    m_border;
     QGraphicsSimpleTextItem m_text;
+    MapRouteItem           *m_route;
     //
     bool m_enableMouse = true;
     bool m_checkable = false;

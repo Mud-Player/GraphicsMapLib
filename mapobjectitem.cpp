@@ -208,6 +208,19 @@ bool MapObjectItem::isChecked() const
     return m_checked;
 }
 
+void MapObjectItem::setRoute(MapRouteItem *route)
+{
+    if(m_route == route)
+        return;
+    m_route = route;
+    emit routeChanged(route);
+}
+
+MapRouteItem *MapObjectItem::route() const
+{
+    return m_route;
+}
+
 const QSet<MapObjectItem *> &MapObjectItem::items()
 {
     return m_items;
