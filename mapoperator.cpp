@@ -14,6 +14,22 @@ InteractiveMapOperator::InteractiveMapOperator(QObject *parent) : QObject(parent
 
 }
 
+void InteractiveMapOperator::pushState()
+{
+    m_modes.push(m_mode);
+    m_trans.push(m_transient);
+}
+
+void InteractiveMapOperator::popState()
+{
+    m_modes.pop();
+    if(!m_modes.isEmpty())
+        m_mode = m_modes.top();
+    m_trans.pop();
+    if(!m_trans.isEmpty())
+        m_transient = m_trans.top();
+}
+
 MapEllipseOperator::MapEllipseOperator(QObject *parent) : InteractiveMapOperator(parent)
 {
 }
@@ -32,6 +48,12 @@ void MapEllipseOperator::end()
 {
     if(m_ellipse)
         m_ellipse->setEditable(false);
+}
+
+bool MapEllipseOperator::mouseDoubleClickEvent(QMouseEvent *)
+{
+    ignoreMouseEventLoop();
+    return false;
 }
 
 bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
@@ -77,7 +99,7 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
     else {  //CreateEdit
         if(auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(m_map->itemAt(event->pos()))) {
             auto cast = dynamic_cast<MapEllipseItem*>(ctrlPoint->parentItem());
-            if(cast == m_ellipse) {
+            if(cast && cast == m_ellipse) {
                 ignoreMouseEventLoop();
                 return false;
             }
@@ -89,7 +111,7 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
     return false;
 }
 
-    bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
+bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
 {
     auto second =  m_map->toCoordinate(event->pos());
     // Check that if the two point is too close, we should delete such an ellipse

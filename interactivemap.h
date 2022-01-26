@@ -2,6 +2,7 @@
 #define INTERACTIVEMAP_H
 
 #include "graphicsmap.h"
+#include <QStack>
 
 class InteractiveMapOperator;
 class MapObjectItem;
@@ -28,9 +29,10 @@ public:
     template<class T>
     void clearMapItem();
 
-    /// 设置事件交互操作器
-    void setOperator(InteractiveMapOperator *op = nullptr);
-    void unsetOperator();
+    /// 设置事件交互操作器(操作器的状态也会被保存到栈上,因此同一个操作器在不同栈位置上，可以执行不同的模式)
+    void pushOperator(InteractiveMapOperator *op = nullptr);
+    void popOperator();
+    void clearOperator();
     /// 保持对象居中，传空值可以取消设置
     void setCenter(const MapObjectItem *obj);
     /// 设置鼠标是否可以交互缩放
@@ -47,10 +49,10 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-    InteractiveMapOperator *m_operator;     ///< 操作器
-    const MapObjectItem    *m_centerObj;    ///< 居中对象
-    QGraphicsView::DragMode m_dragMode;     ///< 拖拽模式(用于取消居中之后回到之前的模式)
-    QGraphicsView::ViewportAnchor m_anchor; ///< 鼠标锚点(用于取消居中之后回到之前的模式)
+    QStack<InteractiveMapOperator*> m_operators;     ///< 操作器栈
+    const MapObjectItem    *m_centerObj;             ///< 居中对象
+    QGraphicsView::DragMode m_dragMode;              ///< 拖拽模式(用于取消居中之后回到之前的模式)
+    QGraphicsView::ViewportAnchor m_anchor;          ///< 鼠标锚点(用于取消居中之后回到之前的模式)
     //
     bool  m_scaleable;  ///< 是否可以鼠标缩放
 };
@@ -111,6 +113,10 @@ private:
     inline void setScene(QGraphicsScene *scene) {m_scene = scene;};
     inline void setMap(InteractiveMap *map) {m_map = map;};
 
+    /// 状态出入栈
+    void pushState();
+    void popState();
+
 protected:
     /// 忽略一次按键事件循环，从press到release的事件，通常在mousePressEvent调用
     inline void ignoreKeyEventLoop() {m_ignoreKeyEventLoop = true;};
@@ -135,8 +141,12 @@ protected:
 private:
     bool m_ignoreKeyEventLoop = false;
     bool m_ignoreMouseEventLoop = false;
+    //
     OperatorMode m_mode = CreateEdit;  ///< 操作模式
-    bool m_transient = false;       ///< 操作器瞬态
+    bool         m_transient = false;  ///< 操作器瞬态
+    //
+    QStack<OperatorMode> m_modes;
+    QStack<bool>         m_trans;
 };
 
 #endif // INTERACTIVEMAP_H
