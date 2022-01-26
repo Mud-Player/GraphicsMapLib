@@ -113,9 +113,6 @@ private:
     inline void setScene(QGraphicsScene *scene) {m_scene = scene;};
     inline void setMap(InteractiveMap *map) {m_map = map;};
 
-    /// 状态出入栈
-    void pushState();
-    void popState();
 
 protected:
     /// 忽略一次按键事件循环，从press到release的事件，通常在mousePressEvent调用
@@ -127,6 +124,8 @@ protected:
 protected:
     virtual void ready(){}; /// 重新被设置为操作器的时候将会被调用
     virtual void end(){};   /// 操作器被取消的时候将会被调用
+    virtual void pushState(); /// 状态入栈，重写该函数保存自己的数据
+    virtual void popState();  /// 状态出栈，重写该函数恢复自己的数据
     virtual bool keyPressEvent(QKeyEvent *) {return false;};
     virtual bool keyReleaseEvent(QKeyEvent *) {return false;};
     virtual bool mouseDoubleClickEvent(QMouseEvent *) {return false;};

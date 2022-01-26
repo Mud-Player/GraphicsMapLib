@@ -163,3 +163,24 @@ void InteractiveMap::mouseReleaseEvent(QMouseEvent *event)
 
     viewport()->setCursor(Qt::ArrowCursor);
 }
+
+InteractiveMapOperator::InteractiveMapOperator(QObject *parent) : QObject(parent)
+{
+
+}
+
+void InteractiveMapOperator::pushState()
+{
+    m_modes.push(m_mode);
+    m_trans.push(m_transient);
+}
+
+void InteractiveMapOperator::popState()
+{
+    m_modes.pop();
+    if(!m_modes.isEmpty())
+        m_mode = m_modes.top();
+    m_trans.pop();
+    if(!m_trans.isEmpty())
+        m_transient = m_trans.top();
+}
