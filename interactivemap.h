@@ -79,8 +79,20 @@ class GRAPHICSMAPLIB_EXPORT InteractiveMapOperator : public QObject
 {
     Q_OBJECT
     friend InteractiveMap;
+
 public:
+    /// 操作模式
+    enum OperatorMode {
+        CreateOnly,   ///< 创建模式
+        EditOnly,     ///< 编辑模式
+        CreateEdit    ///< 创建+编辑
+    };
+
     InteractiveMapOperator(QObject *parent = nullptr);
+
+    /// 设置操作模式
+    inline void setMode(OperatorMode mode) { m_mode = mode;}
+    inline OperatorMode mode() const { return m_mode;}
 
     /// 设置是否为瞬态操作器，当其completed之后将会自动被地图取消
     inline void setTransient(bool transient) { m_transient = transient;};
@@ -123,7 +135,8 @@ protected:
 private:
     bool m_ignoreKeyEventLoop = false;
     bool m_ignoreMouseEventLoop = false;
-    bool m_transient = false;    ///< 操作器瞬态
+    OperatorMode m_mode = CreateEdit;  ///< 操作模式
+    bool m_transient = false;       ///< 操作器瞬态
 };
 
 #endif // INTERACTIVEMAP_H

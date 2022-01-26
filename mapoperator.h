@@ -23,8 +23,8 @@ class GRAPHICSMAPLIB_EXPORT MapEllipseOperator : public InteractiveMapOperator
 public:
     MapEllipseOperator(QObject *parent = nullptr);
 
-    /// 编辑已经创建的圆形(请确保被应用为操作器后再调用)
-    void edit(MapEllipseItem *item);
+    /// 接管已经创建的圆形(请确保被应用为操作器后再调用)
+    void takeOver(MapEllipseItem *item);
 signals:
     void created(MapEllipseItem *item);
 
@@ -51,8 +51,8 @@ class GRAPHICSMAPLIB_EXPORT MapPolygonOperator : public InteractiveMapOperator
 public:
     MapPolygonOperator(QObject *parent = nullptr);
 
-    /// 编辑已经创建的圆形(请确保被应用为操作器后再调用)
-    void edit(MapPolygonItem *item);
+    /// 接管已经创建的多边行(请确保被应用为操作器后再调用)
+    void takeOver(MapPolygonItem *item);
 signals:
     void created(MapPolygonItem *item);
 
@@ -104,8 +104,9 @@ class GRAPHICSMAPLIB_EXPORT MapRouteOperator : public InteractiveMapOperator
 
 public:
     MapRouteOperator(QObject *parent = nullptr);
-    /// 编辑已经创建的航路(请确保被应用为操作器后再调用)
-    void edit(MapRouteItem *item);
+
+    /// 接管已经创建的航路(请确保被应用为操作器后再调用)
+    void takeOver(MapRouteItem *item);
 
     /// 设置航点的默认图标
     void setWaypointIcon(const QPixmap &pixmap);

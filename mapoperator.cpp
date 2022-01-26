@@ -18,7 +18,7 @@ MapEllipseOperator::MapEllipseOperator(QObject *parent) : InteractiveMapOperator
 {
 }
 
-void MapEllipseOperator::edit(MapEllipseItem *item)
+void MapEllipseOperator::takeOver(MapEllipseItem *item)
 {
     m_ellipse = item;
 }
@@ -36,6 +36,20 @@ void MapEllipseOperator::end()
 
 bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
 {
+    // lambda function to create ellipse
+    auto doCreating = [=]() {
+        // unset editable for previous created item
+        if(m_ellipse)
+            m_ellipse->setEditable(false);
+        m_ellipse = new MapEllipseItem;
+        m_scene->addItem(m_ellipse);
+        m_first  = m_map->toCoordinate(event->pos());
+        m_ellipse->setRect(m_first, m_first);
+        m_ellipse->setEditable(true);
+        //
+        emit created(m_ellipse);
+    };
+
     // completed
     if(event->buttons() & Qt::RightButton) {
         ignoreMouseEventLoop();
@@ -47,31 +61,35 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
         return false;
     }
 
-    // Ignore the event whec click on the control point
-    if(auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(m_map->itemAt(event->pos()))) {
-        auto cast = dynamic_cast<MapEllipseItem*>(ctrlPoint->parentItem());
-        if(MapEllipseItem::items().contains(cast)) {
-            ignoreMouseEventLoop();
-            return false;
-        }
+    if(mode() == CreateOnly) {
+        doCreating();
+        return true;
     }
-
-    // unset editable for previous created item
-    if(m_ellipse)
-        m_ellipse->setEditable(false);
-
-    //
-    m_ellipse = new MapEllipseItem;
-    m_scene->addItem(m_ellipse);
-    m_first  = m_map->toCoordinate(event->pos());
-    m_ellipse->setRect(m_first, m_first);
-    m_ellipse->setEditable(true);
-    //
-    emit created(m_ellipse);
-    return true;
+    // we should ignore event whatever when we press at EditOnly mode
+    else if(mode() == EditOnly) {
+        if(m_ellipse)
+            m_ellipse->setEditable(true);
+        ignoreMouseEventLoop();
+        return false;
+    }
+    // we should ignore event if we pressed the control point
+    // else, do creating operation
+    else {  //CreateEdit
+        if(auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(m_map->itemAt(event->pos()))) {
+            auto cast = dynamic_cast<MapEllipseItem*>(ctrlPoint->parentItem());
+            if(cast == m_ellipse) {
+                ignoreMouseEventLoop();
+                return false;
+            }
+        }
+        // creating operation
+        doCreating();
+        return true;
+    }
+    return false;
 }
 
-bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
+    bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
 {
     auto second =  m_map->toCoordinate(event->pos());
     // Check that if the two point is too close, we should delete such an ellipse
@@ -101,7 +119,7 @@ MapPolygonOperator::MapPolygonOperator(QObject *parent) : InteractiveMapOperator
 
 }
 
-void MapPolygonOperator::edit(MapPolygonItem *item)
+void MapPolygonOperator::takeOver(MapPolygonItem *item)
 {
     m_polygon = item;
 }
@@ -216,7 +234,7 @@ MapRouteOperator::MapRouteOperator(QObject *parent) : InteractiveMapOperator(par
 {
 }
 
-void MapRouteOperator::edit(MapRouteItem *item)
+void MapRouteOperator::takeOver(MapRouteItem *item)
 {
     if(m_route) {
         m_route->setMoveable(false);

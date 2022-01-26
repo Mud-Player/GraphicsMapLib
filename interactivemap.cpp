@@ -21,8 +21,6 @@ void InteractiveMap::setOperator(InteractiveMapOperator *op)
     // process end funtion with previos operator
     if(m_operator) {
         unsetOperator();
-        if(m_operator->isTransient())
-            disconnect(m_operator, &InteractiveMapOperator::completed, this, &InteractiveMap::unsetOperator);
     }
 
     m_operator = op;
@@ -40,6 +38,10 @@ void InteractiveMap::setOperator(InteractiveMapOperator *op)
 
 void InteractiveMap::unsetOperator()
 {
+    if(!m_operator)
+        return;
+    if(m_operator->isTransient())
+        disconnect(m_operator, &InteractiveMapOperator::completed, this, &InteractiveMap::unsetOperator);
     m_operator->end();
     m_operator->m_ignoreKeyEventLoop = false;
     m_operator->m_ignoreMouseEventLoop = false;
