@@ -416,7 +416,7 @@ MapRectOperator::MapRectOperator(QObject *parent) : InteractiveMapOperator(paren
 
 }
 
-void MapRectOperator::edit(MapRectItem *item)
+void MapRectOperator::takeOver(MapRectItem *item)
 {
     m_rect = item;
 }

@@ -18,7 +18,7 @@ public:
     MapPolygonItem();
     ~MapPolygonItem();
     /// 控制可编辑性
-    void setEditable(const bool &editable);
+    void setEditable(bool editable);
     /// 添加经纬点
     void append(const QGeoCoordinate &coord);
     /// 修改经纬点
@@ -39,6 +39,7 @@ signals:
     void removed(const int index, const QGeoCoordinate &coord);
     void updated(const int &index, const QGeoCoordinate &coord);
     void changed();
+    void editableChanged(bool editable);
 
 protected:
     virtual bool sceneEventFilter(QGraphicsItem *watched, QEvent *event) override;

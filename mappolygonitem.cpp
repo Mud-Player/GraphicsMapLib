@@ -27,12 +27,13 @@ MapPolygonItem::~MapPolygonItem()
     qDeleteAll(m_ctrlPoints);
 }
 
-void MapPolygonItem::setEditable(const bool &editable)
+void MapPolygonItem::setEditable(bool editable)
 {
     if(m_editable == editable)
         return;
 
     m_editable = editable;
+    emit editableChanged(editable);
     updateEditable();
 }
 
@@ -149,7 +150,7 @@ QVariant MapPolygonItem::itemChange(QGraphicsItem::GraphicsItemChange change, co
        return QGraphicsPolygonItem::itemChange(change, value);
 
    m_sceneAdded = true;
-   for(auto ctrlPoint : m_ctrlPoints) {
+   for(auto ctrlPoint : qAsConst(m_ctrlPoints)) {
        // control point's move event help us to move polygon point
        ctrlPoint->installSceneEventFilter(this);
    }

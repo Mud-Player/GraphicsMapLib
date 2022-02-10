@@ -173,8 +173,8 @@ class GRAPHICSMAPLIB_EXPORT MapRectOperator : public InteractiveMapOperator
 public:
     MapRectOperator(QObject *parent = nullptr);
 
-    /// 编辑已经创建的矩形(请确保被应用为操作器后再调用)
-    void edit(MapRectItem *item);
+    /// 接管已经创建的矩形(请确保被应用为操作器后再调用)
+    void takeOver(MapRectItem *item);
 
 signals:
     void created(MapRectItem *item);
