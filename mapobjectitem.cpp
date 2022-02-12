@@ -285,3 +285,9 @@ void MapObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     emit released();
     emit clicked(m_checked);
 }
+
+void MapObjectItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsPixmapItem::mouseDoubleClickEvent(event);
+    emit doubleClicked();
+}

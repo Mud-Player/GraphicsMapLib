@@ -19,16 +19,20 @@ public:
     ~MapPolygonItem();
     /// 控制可编辑性
     void setEditable(bool editable);
+    bool isEditable() const;
+    void toggleEditable();
     /// 添加经纬点
     void append(const QGeoCoordinate &coord);
     /// 修改经纬点
     void replace(const int &index, const QGeoCoordinate &coord);
     /// 删除经纬点
-    void remove(const int &index);
+    void remove(int index);
+    void removeEnd();
     /// 设置多边形顶点
     void setPoints(const QVector<QGeoCoordinate> &coords);
     /// 获取多边形顶点
     const QVector<QGeoCoordinate> &points() const;
+    int count();
 
 public:
     /// 获取所有的实例
@@ -39,12 +43,14 @@ signals:
     void removed(const int index, const QGeoCoordinate &coord);
     void updated(const int &index, const QGeoCoordinate &coord);
     void changed();
+    void doubleClicked();
     void editableChanged(bool editable);
 
 protected:
     virtual bool sceneEventFilter(QGraphicsItem *watched, QEvent *event) override;
     /// 被添加到场景后，为控制点添加事件过滤器
     virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
     void updatePolygon();   ///< 通过场景坐标更新图形

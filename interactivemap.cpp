@@ -15,51 +15,56 @@ InteractiveMap::InteractiveMap(QWidget *parent) : GraphicsMap(parent),
 
 }
 
-void InteractiveMap::pushOperator(InteractiveMapOperator *op)
+bool InteractiveMap::pushOperator(MapOperator *op)
 {
     if(!op)
-        return;
+        return false;
+    else if(m_operators.contains(op))
+        return false;
     // process end funtion with previos operator
     if(!m_operators.isEmpty()) {
         auto pre =  m_operators.top();
-        pre->end();
-        pre->m_ignoreKeyEventLoop = false;
-        pre->m_ignoreMouseEventLoop = false;
+        if(pre->mode() == MapOperator::EditOnly)
+            popOperator();
+        else
+            pre->end();
     }
 
     m_operators.push(op);
-    op->pushState();
     //
     op->setScene(this->scene());
     op->setMap(this);
-    if(op->isTransient())
-        connect(op, &InteractiveMapOperator::completed, this, &InteractiveMap::popOperator);
-
+    if(op->mode() == MapOperator::EditOnly)
+        connect(op, &MapOperator::completed, this, &InteractiveMap::popOperator, Qt::ConnectionType(Qt::AutoConnection|Qt::UniqueConnection));
+    connect(op, &MapOperator::modeChanged, this, &InteractiveMap::onOperatorModeChanged, Qt::ConnectionType(Qt::AutoConnection|Qt::UniqueConnection));
     // process ready funtion with newlly operator
     op->ready();
+    return true;
 }
 
-void InteractiveMap::popOperator()
+bool InteractiveMap::popOperator()
 {
     if(m_operators.isEmpty())
-        return;
+        return false;
     // unset current
     auto op = m_operators.pop();
-    op->popState();
-    if(op->isTransient())
-        disconnect(op, &InteractiveMapOperator::completed, this, &InteractiveMap::popOperator);
+    disconnect(op, &MapOperator::completed, this, &InteractiveMap::popOperator);
     op->end();
-    op->m_ignoreKeyEventLoop = false;
-    op->m_ignoreMouseEventLoop = false;
 
     // set new current
     // todo: ignore event for newOp at first
     if(!m_operators.isEmpty()) {
         auto newOp = m_operators.top();
         newOp->ready();
-        newOp->m_ignoreKeyEventLoop = true;
-        newOp->m_ignoreMouseEventLoop = true;
     }
+    return true;
+}
+
+MapOperator *InteractiveMap::topOperator() const
+{
+    if(m_operators.isEmpty())
+        return nullptr;
+    return m_operators.top();
 }
 
 void InteractiveMap::clearOperator()
@@ -82,7 +87,7 @@ void InteractiveMap::setCenter(const MapObjectItem *obj)
     m_centerObj = obj;
     if(m_centerObj) {
         // We should not to drag map when object is always center on map
-        connect(obj, &MapObjectItem::coordinateChanged, this, qOverload<const QGeoCoordinate&>(&GraphicsMap::centerOn));
+        connect(obj, &MapObjectItem::coordinateChanged, this, qOverload<const QGeoCoordinate&>(&GraphicsMap::centerOn), Qt::ConnectionType(Qt::AutoConnection|Qt::UniqueConnection));
         this->setDragMode(QGraphicsView::NoDrag);
         this->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
         centerOn(obj->coordinate());
@@ -116,38 +121,29 @@ void InteractiveMap::wheelEvent(QWheelEvent *e)
 void InteractiveMap::keyPressEvent(QKeyEvent *event)
 {
     auto op = m_operators.isEmpty() ? nullptr : m_operators.top();
-    if(!op || op->isIgnoreKeyEventLoop() || !op->keyPressEvent(event))
+    if(!op || !op->handleKeyPressEvent(event))
         GraphicsMap::keyPressEvent(event);
 }
 
 void InteractiveMap::keyReleaseEvent(QKeyEvent *event)
 {
     auto op = m_operators.isEmpty() ? nullptr : m_operators.top();
-    if(!op || op->isIgnoreKeyEventLoop() || !op->keyReleaseEvent(event))
+    if(!op || !op->handleKeyReleaseEvent(event))
         GraphicsMap::keyReleaseEvent(event);
-    if(op)
-        op->m_ignoreKeyEventLoop = false;
-}
-
-void InteractiveMap::mouseDoubleClickEvent(QMouseEvent *event)
-{
-    auto op = m_operators.isEmpty() ? nullptr : m_operators.top();
-    if(!op || op->isIgnoreMouseEventLoop()  || !op->mouseDoubleClickEvent(event))
-        GraphicsMap::mouseDoubleClickEvent(event);
 }
 
 void InteractiveMap::mouseMoveEvent(QMouseEvent *event)
 {
     auto op = m_operators.isEmpty() ? nullptr : m_operators.top();
     // TODO: move event will be generated whether press event is triggerd or not
-    if(!event->buttons()  || !op || op->isIgnoreMouseEventLoop() || !op->mouseMoveEvent(event))
+    if( !op || !op->handleMouseMoveEvent(event))
         GraphicsMap::mouseMoveEvent(event);
 }
 
 void InteractiveMap::mousePressEvent(QMouseEvent *event)
 {
     auto op = m_operators.isEmpty() ? nullptr : m_operators.top();
-    if(!op || op->isIgnoreMouseEventLoop() || !op->mousePressEvent(event))
+    if(!op || !op->handleMousePressEvent(event))
         GraphicsMap::mousePressEvent(event);
 
     viewport()->setCursor(Qt::ArrowCursor);
@@ -156,31 +152,103 @@ void InteractiveMap::mousePressEvent(QMouseEvent *event)
 void InteractiveMap::mouseReleaseEvent(QMouseEvent *event)
 {
     auto op = m_operators.isEmpty() ? nullptr : m_operators.top();
-    if(!op || op->isIgnoreMouseEventLoop() || !op->mouseReleaseEvent(event))
+    if(!op || !op->handleMouseReleaseEvent(event))
         GraphicsMap::mouseReleaseEvent(event);
-    if(op)
-        op->m_ignoreMouseEventLoop = false;
 
     viewport()->setCursor(Qt::ArrowCursor);
 }
 
-InteractiveMapOperator::InteractiveMapOperator(QObject *parent) : QObject(parent)
+void InteractiveMap::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    auto op = m_operators.isEmpty() ? nullptr : m_operators.top();
+    if(!op || !op->handleMouseDoubleClickEvent(event))
+        GraphicsMap::mouseDoubleClickEvent(event);
+}
+
+
+void InteractiveMap::onOperatorModeChanged()
+{
+    auto op = dynamic_cast<MapOperator*>(sender());
+    if(op->mode() == MapOperator::EditOnly) {
+        connect(op, &MapOperator::completed, this, &InteractiveMap::popOperator, Qt::ConnectionType(Qt::AutoConnection|Qt::UniqueConnection));
+    }
+    else {
+        disconnect(op, &MapOperator::completed, this, &InteractiveMap::popOperator);
+    }
+}
+
+MapOperator::MapOperator(QObject *parent) : QObject(parent)
 {
 
 }
 
-void InteractiveMapOperator::pushState()
+void MapOperator::setMode(OperatorMode mode)
 {
-    m_modes.push(m_mode);
-    m_trans.push(m_transient);
+    if(mode == m_mode)
+        return;
+    m_mode = mode;
+    emit modeChanged(mode);
 }
 
-void InteractiveMapOperator::popState()
+void MapOperator::ready()
 {
-    m_modes.pop();
-    if(!m_modes.isEmpty())
-        m_mode = m_modes.top();
-    m_trans.pop();
-    if(!m_trans.isEmpty())
-        m_transient = m_trans.top();
+
+}
+
+void MapOperator::end()
+{
+    // waitting press event to active @enable
+    m_keyEventEnable = false;
+    m_mouseEventEnable = false;
+}
+
+bool MapOperator::handleKeyPressEvent(QKeyEvent *event)
+{
+    m_keyEventEnable = true;
+    return keyPressEvent(event);
+}
+
+bool MapOperator::handleKeyReleaseEvent(QKeyEvent *event)
+{
+    if(m_skipOnceKeyEvent) {
+        m_skipOnceKeyEvent = false;
+        return false;
+    }
+    else if(m_keyEventEnable)
+        return keyReleaseEvent(event);
+    return false;
+}
+
+bool MapOperator::handleMousePressEvent(QMouseEvent *event)
+{
+    m_mouseEventEnable = true;
+    m_skipOnceMouseEvent = false;   // we have to disable it in here
+    return mousePressEvent(event);
+}
+
+bool MapOperator::handleMouseMoveEvent(QMouseEvent *event)
+{
+    if(m_enableMouseMoveEvent && m_mouseEventEnable)
+       return mouseMoveEvent(event);
+    return false;
+}
+
+bool MapOperator::handleMouseReleaseEvent(QMouseEvent *event)
+{
+    if(m_skipOnceMouseEvent) {
+        return false;
+    }
+    else if(m_mouseEventEnable)
+        return mouseReleaseEvent(event);
+    return false;
+}
+
+bool MapOperator::handleMouseDoubleClickEvent(QMouseEvent *event)
+{
+    if(m_skipOnceMouseEvent) {
+        return false;
+    }
+    else if(m_mouseEventEnable)
+        return mouseDoubleClickEvent(event);
+    return false;
 }

@@ -9,7 +9,7 @@
 #include "maprectitem.h"
 #include <QDebug>
 
-MapEllipseOperator::MapEllipseOperator(QObject *parent) : InteractiveMapOperator(parent)
+MapEllipseOperator::MapEllipseOperator(QObject *parent) : MapOperator(parent)
 {
 }
 
@@ -20,71 +20,57 @@ void MapEllipseOperator::takeOver(MapEllipseItem *item)
 
 void MapEllipseOperator::ready()
 {
+    MapOperator::ready();
     m_ellipse = nullptr;
 }
 
 void MapEllipseOperator::end()
 {
+    MapOperator::end();
     if(m_ellipse)
         m_ellipse->setEditable(false);
+    m_ellipse = nullptr;
 }
 
-bool MapEllipseOperator::mouseDoubleClickEvent(QMouseEvent *)
+bool MapEllipseOperator::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    ignoreMouseEventLoop();
+    skipOnceMouseEvent();
+    ignoreMouseMoveEvent();
+    // finish
+    if(event->buttons() & Qt::LeftButton) {
+        detach();
+        emit completed();
+        return false;
+    }
     return false;
 }
 
 bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
 {
-    // lambda function to create ellipse
-    auto doCreating = [=]() {
-        // unset editable for previous created item
-        if(m_ellipse)
-            m_ellipse->setEditable(false);
-        m_ellipse = new MapEllipseItem;
-        m_scene->addItem(m_ellipse);
-        m_first  = m_map->toCoordinate(event->pos());
-        m_ellipse->setRect(m_first, m_first);
-        m_ellipse->setEditable(true);
-        //
-        emit created(m_ellipse);
-    };
-
-    // completed
-    if(event->buttons() & Qt::RightButton) {
-        ignoreMouseEventLoop();
-        if(m_ellipse) {
-            m_ellipse->setEditable(false);
-            m_ellipse = nullptr;
-        }
-        emit completed();
+    m_first  = m_map->toCoordinate(event->pos());
+    // we should ignore event whatever we press at EditOnly mode
+    if(mode() == EditOnly) {
         return false;
     }
-
-    if(mode() == CreateOnly) {
-        doCreating();
+    // just create one
+    else if(mode() == CreateOnly) {
+        detach();
+        m_first  = m_map->toCoordinate(event->pos());
+        acceptMouseMoveEvent();
         return true;
     }
-    // we should ignore event whatever when we press at EditOnly mode
-    else if(mode() == EditOnly) {
-        if(m_ellipse)
-            m_ellipse->setEditable(true);
-        ignoreMouseEventLoop();
-        return false;
-    }
-    // we should ignore event if we pressed the control point
     // else, do creating operation
     else {  //CreateEdit
         if(auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(m_map->itemAt(event->pos()))) {
             auto cast = dynamic_cast<MapEllipseItem*>(ctrlPoint->parentItem());
+            // we should ignore event if we pressed the control point
             if(cast && cast == m_ellipse) {
-                ignoreMouseEventLoop();
+                skipOnceMouseEvent();
                 return false;
             }
         }
-        // creating operation
-        doCreating();
+        detach();
+        acceptMouseMoveEvent();
         return true;
     }
     return false;
@@ -92,6 +78,10 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
 {
+    // we should ignore event whatever we press at EditOnly mode
+    if(mode() == EditOnly) {
+        return false;
+    }
     auto second =  m_map->toCoordinate(event->pos());
     // Check that if the two point is too close, we should delete such an ellipse
     auto point0 = m_map->toPoint(m_first);
@@ -102,11 +92,27 @@ bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
         return true;
     }
     m_ellipse->setRect(m_first, second);
+    ignoreMouseMoveEvent();
     return true;
 }
 
 bool MapEllipseOperator::mouseMoveEvent(QMouseEvent *event)
 {
+    // lambda function to create ellipse
+    auto createEllipse = [=]() {
+        // unset editable for previous created item
+        auto ellipse = m_map->addMapItem<MapEllipseItem>();
+        ellipse->setRect(m_first, m_first);
+        ellipse->setEditable(true);
+        //
+        return ellipse;
+    };
+
+    if(!m_ellipse) {
+        m_ellipse = createEllipse();
+        emit created(m_ellipse);
+    }
+
     auto second =  m_map->toCoordinate(event->pos());
     m_ellipse->setRect(m_first, second);
     // Press Event didn't propagte to QGraphicsView ,
@@ -115,26 +121,37 @@ bool MapEllipseOperator::mouseMoveEvent(QMouseEvent *event)
     return false;
 }
 
-MapPolygonOperator::MapPolygonOperator(QObject *parent) : InteractiveMapOperator(parent)
+void MapEllipseOperator::detach()
+{
+    if(m_ellipse) {
+        m_ellipse->setEditable(false);
+        m_ellipse = nullptr;
+    }
+}
+
+MapPolygonOperator::MapPolygonOperator(QObject *parent) : MapOperator(parent)
 {
 
 }
 
 void MapPolygonOperator::takeOver(MapPolygonItem *item)
 {
+    if(m_polygon) {
+        m_polygon->setEditable(false);
+    }
     m_polygon = item;
 }
 
 void MapPolygonOperator::ready()
 {
+    MapOperator::ready();
     m_polygon = nullptr;
-    m_finishRequested = false;
 }
 
 void MapPolygonOperator::end()
 {
-    if(m_polygon)
-        m_polygon->setEditable(false);
+    MapOperator::end();
+    detach();
 }
 
 bool MapPolygonOperator::keyPressEvent(QKeyEvent *event)
@@ -152,16 +169,22 @@ bool MapPolygonOperator::mouseDoubleClickEvent(QMouseEvent *event)
     Q_UNUSED(event)
     // the last point have been craeted since previous mouse release event
     if(m_polygon) {
-        m_finishRequested = true;
+        m_polygon->removeEnd();
+        if(m_polygon->count() < 3) {
+            delete m_polygon;
+            m_polygon = nullptr;
+        }
+        this->skipOnceMouseEvent();
+        detach();
+        emit completed();
     }
     return false;
 }
 
 bool MapPolygonOperator::mousePressEvent(QMouseEvent *event)
 {
-    if(event->buttons() & Qt::RightButton) {
-        m_finishRequested = true;
-        return false;
+    if(m_mode == EditOnly) {
+
     }
     m_pressPos = event->pos();
     return false;
@@ -169,14 +192,6 @@ bool MapPolygonOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapPolygonOperator::mouseReleaseEvent(QMouseEvent *event)
 {
-    // create end
-    if(m_finishRequested) {
-        m_finishRequested = false;
-        if(m_polygon)
-            m_polygon->setEditable(false);
-        m_polygon = nullptr;
-        return false;
-    }
     // do nothing
     if(m_pressPos != event->pos())
         return false;
@@ -192,21 +207,40 @@ bool MapPolygonOperator::mouseReleaseEvent(QMouseEvent *event)
     return false;
 }
 
-MapObjectOperator::MapObjectOperator(QObject *parent) : InteractiveMapOperator(parent)
+void MapPolygonOperator::detach()
 {
+    if(m_polygon)
+        m_polygon->setEditable(false);
+    m_polygon = nullptr;
+}
+
+MapObjectOperator::MapObjectOperator(QObject *parent) : MapOperator(parent)
+{
+}
+
+void MapObjectOperator::takeOver(MapObjectItem *item)
+{
+    detach();
+    m_obj = item;
+    item->setCheckable(true);
+    item->setChecked(true);
+    item->setMoveable(true);
 }
 
 void MapObjectOperator::ready()
 {
+    MapOperator::ready();
 }
 
 void MapObjectOperator::end()
 {
+    MapOperator::end();
+    detach();
 }
 
 bool MapObjectOperator::mousePressEvent(QMouseEvent *event)
 {
-    if(!(event->buttons() & Qt::LeftButton)) {
+    if(this->mode() == EditOnly) {
         return false;
     }
     m_pressPos = event->pos();
@@ -215,6 +249,9 @@ bool MapObjectOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapObjectOperator::mouseReleaseEvent(QMouseEvent *event)
 {
+    if(this->mode() == EditOnly) {
+        return false;
+    }
     // do nothing
     if(m_pressPos != event->pos())
         return false;
@@ -227,11 +264,30 @@ bool MapObjectOperator::mouseReleaseEvent(QMouseEvent *event)
     object->setCoordinate(coord);
     //
     emit created(object);
-    emit completed();
     return false;
 }
 
-MapRouteOperator::MapRouteOperator(QObject *parent) : InteractiveMapOperator(parent)
+bool MapObjectOperator::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    // finish
+    if(event->buttons() & Qt::LeftButton) {
+        detach();
+        emit completed();
+    }
+    return false;
+}
+
+void MapObjectOperator::detach()
+{
+    if(m_obj) {
+        m_obj->setCheckable(false);
+        m_obj->setChecked(false);
+        m_obj->setMoveable(false);
+    }
+    m_obj = nullptr;
+}
+
+MapRouteOperator::MapRouteOperator(QObject *parent) : MapOperator(parent)
 {
 }
 
@@ -271,7 +327,7 @@ bool MapRouteOperator::keyPressEvent(QKeyEvent *event)
         return false;
     if(event->key() == Qt::Key_Backspace) {
         auto points = m_route->checked();
-        for(auto point : points) {
+        for(auto point : qAsConst(points)) {
             m_route->remove(point);
         }
     }
@@ -301,7 +357,7 @@ bool MapRouteOperator::mousePressEvent(QMouseEvent *event)
             m_route->setCheckable(false);
         }
         m_route = nullptr;
-        ignoreMouseEventLoop();
+        skipOnceMouseEvent();
         emit completed();
         return false;
     }
@@ -311,11 +367,10 @@ bool MapRouteOperator::mousePressEvent(QMouseEvent *event)
 
     // check that if we clicked waypoint
     auto mouseItems = m_map->items(event->pos());
-    auto routeItems = m_route->childItems();
-    for(auto item : mouseItems) {
+    for(auto item : qAsConst(mouseItems)) {
         // find MapObjectItem child
         if(m_route->childItems().contains(item)) {
-            ignoreMouseEventLoop();
+            skipOnceMouseEvent();
             return false;   // the waypoint itself will process setChecked
         }
     }
@@ -346,24 +401,26 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
     m_route->setChecked(index + 1);
     return false;
 }
-MapRangeLineOperator::MapRangeLineOperator(QObject *parent) : InteractiveMapOperator(parent)
+MapRangeLineOperator::MapRangeLineOperator(QObject *parent) : MapOperator(parent)
 {
 }
 
 void MapRangeLineOperator::ready()
 {
-	m_line = nullptr;
+    MapOperator::ready();
+    m_line = nullptr;
 }
 
 void MapRangeLineOperator::end()
 {
-	m_line = nullptr;
+    MapOperator::end();
+    m_line = nullptr;
 }
 
 bool MapRangeLineOperator::mousePressEvent(QMouseEvent *event)
 {
     if (!(event->buttons() & Qt::LeftButton)) {
-        ignoreMouseEventLoop();
+        skipOnceMouseEvent();
         return false;
     }
 
@@ -411,55 +468,75 @@ bool MapRangeLineOperator::mouseMoveEvent(QMouseEvent *event)
 	return false;
 }
 
-MapRectOperator::MapRectOperator(QObject *parent) : InteractiveMapOperator(parent)
+MapRectOperator::MapRectOperator(QObject *parent) : MapOperator(parent)
 {
-
 }
 
 void MapRectOperator::takeOver(MapRectItem *item)
 {
+    end();
     m_rect = item;
 }
 
 void MapRectOperator::ready()
 {
+    MapOperator::ready();
     m_rect = nullptr;
 }
 
 void MapRectOperator::end()
 {
+    MapOperator::end();
     if(m_rect)
         m_rect->setEditable(false);
+    m_rect = nullptr;
 }
 
 bool MapRectOperator::mousePressEvent(QMouseEvent *event)
 {
-    // Ignore the event whec click on the control point
+    if(mode() == EditOnly) {
+        return false;
+    }
+    // CreateOnly & CreateEdit
+    // Ignore the event when click on the control point
     if(auto ctrlPoint = dynamic_cast<QGraphicsEllipseItem*>(m_map->itemAt(event->pos()))) {
-        auto cast = dynamic_cast<MapRectItem*>(ctrlPoint->parentItem());
-        if(MapRectItem::items().contains(cast)) {
-            ignoreMouseEventLoop();
+        if(dynamic_cast<MapRectItem*>(ctrlPoint->parentItem()) == m_rect) {
+            skipOnceMouseEvent();
             return false;
         }
     }
 
     // unset editable for previous created item
-    if(m_rect)
-        m_rect->setEditable(false);
+    detach();
 
-    //
-    m_rect = new MapRectItem;
-    m_scene->addItem(m_rect);
     m_first  = m_map->toCoordinate(event->pos());
-    m_rect->setRect(m_first, m_first);
-    m_rect->setEditable(true);
     //
-    emit created(m_rect);
+    acceptMouseMoveEvent();
     return true;
+}
+
+bool MapRectOperator::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    // todo: ignore release event and move event because doubleClick will prepagate that event
+    skipOnceMouseEvent();
+    ignoreMouseMoveEvent();
+
+    // finish
+    if(event->buttons() & Qt::LeftButton) {
+        detach();
+        emit completed();
+        return false;
+    }
+    return false;
 }
 
 bool MapRectOperator::mouseReleaseEvent(QMouseEvent *event)
 {
+    if(mode() == EditOnly) {
+        return false;
+    }
+    ignoreMouseMoveEvent();
+
     auto second =  m_map->toCoordinate(event->pos());
     // Check that if the two point is too close, we should delete such an rect
     auto point0 = m_map->toPoint(m_first);
@@ -472,15 +549,28 @@ bool MapRectOperator::mouseReleaseEvent(QMouseEvent *event)
     m_rect->setRect(m_first, second);
     emit completed();
 
-    return true;
+    return false;
 }
 
 bool MapRectOperator::mouseMoveEvent(QMouseEvent *event)
 {
+    if(!m_rect) {
+        m_rect = m_map->addMapItem<MapRectItem>();
+        m_rect->setEditable(true);   return false;
+        emit created(m_rect);
+    }
     auto second =  m_map->toCoordinate(event->pos());
     m_rect->setRect(m_first, second);
     // Press Event didn't propagte to QGraphicsView ,
     // so we should to return false that helps up to zooming on cursor,
     // and map will not be moved by cursor move
     return false;
+}
+
+void MapRectOperator::detach()
+{
+    if(m_rect) {
+        m_rect->setEditable(false);
+        m_rect = nullptr;
+    }
 }

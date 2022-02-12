@@ -54,6 +54,7 @@ public:
 
 signals:
     void clicked(bool checked = false);
+    void doubleClicked();
     void pressed();
     void released();
     void toggled(bool checked);
@@ -70,6 +71,7 @@ protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
     static QSet<MapObjectItem*> m_items;         ///< 所有实例

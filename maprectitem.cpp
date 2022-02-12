@@ -56,7 +56,18 @@ void MapRectItem::setEditable(const bool &editable)
         return;
 
     m_editable = editable;
+    emit editableChanged(editable);
     updateEditable();
+}
+
+bool MapRectItem::isEditable() const
+{
+    return m_editable;
+}
+
+void MapRectItem::toggleEditable()
+{
+    setEditable(!m_editable);
 }
 
 void MapRectItem::setCenter(const QGeoCoordinate &center)
@@ -226,6 +237,12 @@ QVariant MapRectItem::itemChange(QGraphicsItem::GraphicsItemChange change, const
    m_firstCtrl.installSceneEventFilter(this);
    m_secondCtrl.installSceneEventFilter(this);
    return QGraphicsRectItem::itemChange(change, value);
+}
+
+void MapRectItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsRectItem::mouseDoubleClickEvent(event);
+    emit doubleClicked();
 }
 
 /*!

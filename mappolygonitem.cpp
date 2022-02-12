@@ -37,6 +37,16 @@ void MapPolygonItem::setEditable(bool editable)
     updateEditable();
 }
 
+bool MapPolygonItem::isEditable() const
+{
+    return m_editable;
+}
+
+void MapPolygonItem::toggleEditable()
+{
+    setEditable(!m_editable);
+}
+
 void MapPolygonItem::append(const QGeoCoordinate &coord)
 {
     m_coords.append(coord);
@@ -61,7 +71,7 @@ void MapPolygonItem::replace(const int &index, const QGeoCoordinate &coord)
     emit updated(index, coord);
 }
 
-void MapPolygonItem::remove(const int &index)
+void MapPolygonItem::remove(int index)
 {
     if(index < 0 || index >= m_coords.size())
         return;
@@ -72,6 +82,11 @@ void MapPolygonItem::remove(const int &index)
     updatePolygon();
     //
     emit removed(index, coord);
+}
+
+void MapPolygonItem::removeEnd()
+{
+    remove(m_coords.size() - 1);
 }
 
 void MapPolygonItem::setPoints(const QVector<QGeoCoordinate> &coords)
@@ -94,6 +109,11 @@ void MapPolygonItem::setPoints(const QVector<QGeoCoordinate> &coords)
 const QVector<QGeoCoordinate> &MapPolygonItem::points() const
 {
     return m_coords;
+}
+
+int MapPolygonItem::count()
+{
+    return m_coords.size();
 }
 
 const QSet<MapPolygonItem *> &MapPolygonItem::items()
@@ -155,6 +175,12 @@ QVariant MapPolygonItem::itemChange(QGraphicsItem::GraphicsItemChange change, co
        ctrlPoint->installSceneEventFilter(this);
    }
    return QGraphicsPolygonItem::itemChange(change, value);
+}
+
+void MapPolygonItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsPolygonItem::mouseDoubleClickEvent(event);
+    emit doubleClicked();
 }
 
 void MapPolygonItem::updatePolygon()

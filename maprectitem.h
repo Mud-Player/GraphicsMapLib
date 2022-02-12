@@ -17,6 +17,8 @@ public:
     ~MapRectItem();
     /// 控制可编辑性
     void setEditable(const bool &editable);
+    bool isEditable() const;
+    void toggleEditable();
     /// 设置中心
     void setCenter(const QGeoCoordinate &center);
     /// 设置尺寸 米
@@ -35,11 +37,14 @@ public:
 signals:
     void centerChanged(const QGeoCoordinate &center);
     void sizeChanged(const QSizeF &center);
+    void doubleClicked();
+    void editableChanged(bool editable);
 
 protected:
     virtual bool sceneEventFilter(QGraphicsItem *watched, QEvent *event) override;
     /// 被添加到场景后，为控制点添加事件过滤器
     virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
     void updateRect();

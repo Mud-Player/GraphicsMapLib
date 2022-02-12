@@ -4,7 +4,7 @@
 #include "graphicsmap.h"
 #include <QStack>
 
-class InteractiveMapOperator;
+class MapOperator;
 class MapObjectItem;
 
 /*!
@@ -29,9 +29,10 @@ public:
     template<class T>
     void clearMapItem();
 
-    /// 设置事件交互操作器(操作器的状态也会被保存到栈上,因此同一个操作器在不同栈位置上，可以执行不同的模式)
-    void pushOperator(InteractiveMapOperator *op = nullptr);
-    void popOperator();
+    /// 设置事件交互操作器(不可重复)
+    bool pushOperator(MapOperator *op = nullptr);
+    bool popOperator();
+    MapOperator *topOperator() const;
     void clearOperator();
     /// 保持对象居中，传空值可以取消设置
     void setCenter(const MapObjectItem *obj);
@@ -43,13 +44,16 @@ protected:
     //  将要传递给操作器的事件
     virtual void keyPressEvent(QKeyEvent *event) override;
     virtual void keyReleaseEvent(QKeyEvent *event) override;
-    virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
     virtual void mouseMoveEvent(QMouseEvent *event) override;
     virtual void mousePressEvent(QMouseEvent *event) override;
     virtual void mouseReleaseEvent(QMouseEvent *event) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
-    QStack<InteractiveMapOperator*> m_operators;     ///< 操作器栈
+    void onOperatorModeChanged();
+
+private:
+    QStack<MapOperator*> m_operators;     ///< 操作器栈
     const MapObjectItem    *m_centerObj;             ///< 居中对象
     QGraphicsView::DragMode m_dragMode;              ///< 拖拽模式(用于取消居中之后回到之前的模式)
     QGraphicsView::ViewportAnchor m_anchor;          ///< 鼠标锚点(用于取消居中之后回到之前的模式)
@@ -76,8 +80,11 @@ void InteractiveMap::removeMapItem(T *item)
  * \brief 可交互操作器
  * \details InteractiveMap将会调用该类的事件接口，以提供固定的地图处理功能，比如创建一个圆形
  * \note 在多个事件处理函数中，如果返回true，表示事件已被处理不希望再被传递，反之false表示希望该事件继续被传递处理
+ * 另外，需要注意doubleClick时事件传递是：press release doubleClick release
+ * \todo 为了统计操作器的交互习惯，建议左键双击完成编辑、右键赋予具体的编辑功能
+ * \warning 重写子类的ready和end时，必须调用基类函数
  */
-class GRAPHICSMAPLIB_EXPORT InteractiveMapOperator : public QObject
+class GRAPHICSMAPLIB_EXPORT MapOperator : public QObject
 {
     Q_OBJECT
     friend InteractiveMap;
@@ -85,67 +92,66 @@ class GRAPHICSMAPLIB_EXPORT InteractiveMapOperator : public QObject
 public:
     /// 操作模式
     enum OperatorMode {
+        EditOnly,     ///< 编辑模式，当其completed之后将会自动被取消(自动瞬态)
         CreateOnly,   ///< 创建模式
-        EditOnly,     ///< 编辑模式
         CreateEdit    ///< 创建+编辑
     };
 
-    InteractiveMapOperator(QObject *parent = nullptr);
+    MapOperator(QObject *parent = nullptr);
 
     /// 设置操作模式
-    inline void setMode(OperatorMode mode) { m_mode = mode;}
+    void setMode(OperatorMode mode);
     inline OperatorMode mode() const { return m_mode;}
-
-    /// 设置是否为瞬态操作器，当其completed之后将会自动被地图取消
-    inline void setTransient(bool transient) { m_transient = transient;};
-    inline bool isTransient() const {return m_transient;}
 
     inline QGraphicsScene *scene() const {return m_scene;};
     inline GraphicsMap *map() const {return m_map;};
-    inline bool isIgnoreKeyEventLoop() const {return m_ignoreKeyEventLoop;}
-    inline bool isIgnoreMouseEventLoop() const {return m_ignoreMouseEventLoop;}
 
 signals:
     /// 编辑完成信号
     void completed();
+    void modeChanged(MapOperator::OperatorMode mode);
+
+protected:
+    /// 是否处理鼠标移动事件
+    inline void acceptMouseMoveEvent() {m_enableMouseMoveEvent = true;}
+    inline void ignoreMouseMoveEvent() {m_enableMouseMoveEvent = false;}
+    /// 忽略一次按键事件循环，从press到release的事件，通常在mousePressEvent调用
+    inline void skipOnceKeyEvent() {m_skipOnceKeyEvent = true;}
+    /// 忽略一次鼠标事件循环，从press到release的事件，通常在keyPressEvent调用
+    inline void skipOnceMouseEvent() {m_skipOnceMouseEvent = true;}
+
+
+protected:
+    virtual void ready(); /// 重新被设置为操作器的时候将会被调用
+    virtual void end();   /// 操作器被取消的时候将会被调用
+    virtual bool keyPressEvent(QKeyEvent *event) {return false;}
+    virtual bool keyReleaseEvent(QKeyEvent *event) {return false;};
+    virtual bool mouseDoubleClickEvent(QMouseEvent *event) {return false;};
+    virtual bool mousePressEvent(QMouseEvent *event) {return false;};
+    virtual bool mouseMoveEvent(QMouseEvent *event) {return false;};
+    virtual bool mouseReleaseEvent(QMouseEvent *event) {return false;};
 
 private:
     inline void setScene(QGraphicsScene *scene) {m_scene = scene;};
     inline void setMap(InteractiveMap *map) {m_map = map;};
-
-
-protected:
-    /// 忽略一次按键事件循环，从press到release的事件，通常在mousePressEvent调用
-    inline void ignoreKeyEventLoop() {m_ignoreKeyEventLoop = true;};
-    /// 忽略一次鼠标事件循环，从press到release的事件，通常在keyPressEvent调用
-    void ignoreMouseEventLoop() {m_ignoreMouseEventLoop = true;};
-
-
-protected:
-    virtual void ready(){}; /// 重新被设置为操作器的时候将会被调用
-    virtual void end(){};   /// 操作器被取消的时候将会被调用
-    virtual void pushState(); /// 状态入栈，重写该函数保存自己的数据
-    virtual void popState();  /// 状态出栈，重写该函数恢复自己的数据
-    virtual bool keyPressEvent(QKeyEvent *) {return false;};
-    virtual bool keyReleaseEvent(QKeyEvent *) {return false;};
-    virtual bool mouseDoubleClickEvent(QMouseEvent *) {return false;};
-    virtual bool mouseMoveEvent(QMouseEvent *) {return false;};
-    virtual bool mousePressEvent(QMouseEvent *) {return false;};
-    virtual bool mouseReleaseEvent(QMouseEvent *) {return false;};
+    bool handleKeyPressEvent(QKeyEvent *event);
+    bool handleKeyReleaseEvent(QKeyEvent *event);
+    bool handleMousePressEvent(QMouseEvent *event);
+    bool handleMouseMoveEvent(QMouseEvent *event);
+    bool handleMouseReleaseEvent(QMouseEvent *event);
+    bool handleMouseDoubleClickEvent(QMouseEvent *event);
 
 protected:
     QGraphicsScene *m_scene;
     InteractiveMap *m_map;
+    OperatorMode m_mode = CreateEdit;  ///< 操作模式
 
 private:
-    bool m_ignoreKeyEventLoop = false;
-    bool m_ignoreMouseEventLoop = false;
-    //
-    OperatorMode m_mode = CreateEdit;  ///< 操作模式
-    bool         m_transient = false;  ///< 操作器瞬态
-    //
-    QStack<OperatorMode> m_modes;
-    QStack<bool>         m_trans;
+    bool m_enableMouseMoveEvent = false;
+    bool m_skipOnceKeyEvent = false;
+    bool m_skipOnceMouseEvent = false;
+    bool m_keyEventEnable = false;      ///< 当突然被切换到该操作器时，防止前一个操作器的release事件没有处理
+    bool m_mouseEventEnable = false;    ///< 当突然被切换到该操作器时，防止前一个操作器的release事件没有处理
 };
 
 #endif // INTERACTIVEMAP_H
