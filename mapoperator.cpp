@@ -78,19 +78,22 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
 {
+    if(!m_ellipse) {
+        ignoreMouseMoveEvent();
+        skipOnceMouseEvent();
+        return false;
+    }
     // we should ignore event whatever we press at EditOnly mode
     if(mode() == EditOnly) {
         return false;
     }
-    auto second =  m_map->toCoordinate(event->pos());
-    // Check that if the two point is too close, we should delete such an ellipse
+    // Check that if the two point is too close
     auto point0 = m_map->toPoint(m_first);
-    auto point1 = m_map->toPoint(second);
+    auto point1 = event->pos();
     if((point0 - point1).manhattanLength() < 50) {
-        delete m_ellipse;
-        m_ellipse = nullptr;
-        return true;
+        point1 = point0 + QPoint(25, 25);
     }
+    auto second =  m_map->toCoordinate(point1);
     m_ellipse->setRect(m_first, second);
     ignoreMouseMoveEvent();
     return true;
@@ -167,16 +170,12 @@ bool MapPolygonOperator::keyPressEvent(QKeyEvent *event)
 bool MapPolygonOperator::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_UNUSED(event)
-    // the last point have been craeted since previous mouse release event
+    // the last point have been created since previous mouse release event
     if(m_polygon) {
-        m_polygon->removeEnd();
-        if(m_polygon->count() < 3) {
-            delete m_polygon;
-            m_polygon = nullptr;
-        }
         this->skipOnceMouseEvent();
         detach();
         emit completed();
+        return true;    // prevent double Click propagate to item
     }
     return false;
 }
@@ -556,7 +555,7 @@ bool MapRectOperator::mouseMoveEvent(QMouseEvent *event)
 {
     if(!m_rect) {
         m_rect = m_map->addMapItem<MapRectItem>();
-        m_rect->setEditable(true);   return false;
+        m_rect->setEditable(true);
         emit created(m_rect);
     }
     auto second =  m_map->toCoordinate(event->pos());
