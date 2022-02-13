@@ -30,7 +30,7 @@ public:
     void clearMapItem();
 
     /// 设置事件交互操作器(不可重复)
-    bool pushOperator(MapOperator *op = nullptr);
+    bool pushOperator(MapOperator *op);
     bool popOperator();
     MapOperator *topOperator() const;
     void clearOperator();
@@ -80,7 +80,7 @@ void InteractiveMap::removeMapItem(T *item)
  * \brief 可交互操作器
  * \details InteractiveMap将会调用该类的事件接口，以提供固定的地图处理功能，比如创建一个圆形
  * \note 在多个事件处理函数中，如果返回true，表示事件已被处理不希望再被传递，反之false表示希望该事件继续被传递处理
- * 另外，需要注意doubleClick时事件传递是：press release doubleClick release
+ * 另外，一个鼠标事件周期包含两种：press release 和 doubleClick release
  * \todo 为了统计操作器的交互习惯，建议左键双击完成编辑、右键赋予具体的编辑功能
  * \warning 重写子类的ready和end时，必须调用基类函数
  */
@@ -112,9 +112,8 @@ signals:
     void modeChanged(MapOperator::OperatorMode mode);
 
 protected:
-    /// 是否处理鼠标移动事件
-    inline void acceptMouseMoveEvent() {m_enableMouseMoveEvent = true;}
-    inline void ignoreMouseMoveEvent() {m_enableMouseMoveEvent = false;}
+    /// 是否追踪鼠标移动事件(如果启用，moveEvent将不会首受到skipOnceMouseEvent的影响)
+    inline void setMouseTracking(bool enable) {m_mouseMoveTrackingEnable = enable;}
     /// 忽略一次按键事件循环，从press到release的事件，通常在mousePressEvent调用
     inline void skipOnceKeyEvent() {m_skipOnceKeyEvent = true;}
     /// 忽略一次鼠标事件循环，从press到release的事件，通常在keyPressEvent调用
@@ -147,11 +146,12 @@ protected:
     OperatorMode m_mode = CreateEdit;  ///< 操作模式
 
 private:
-    bool m_enableMouseMoveEvent = false;
-    bool m_skipOnceKeyEvent = false;
-    bool m_skipOnceMouseEvent = false;
-    bool m_keyEventEnable = false;      ///< 当突然被切换到该操作器时，防止前一个操作器的release事件没有处理
-    bool m_mouseEventEnable = false;    ///< 当突然被切换到该操作器时，防止前一个操作器的release事件没有处理
+    bool m_mouseMoveTrackingEnable = false; ///< 即便没有按下鼠标也能出发move事件
+    bool m_skipOnceKeyEvent = false;     ///< 跳过一次release直到新的press
+    bool m_skipOnceMouseEvent = false;   ///< 跳过多次move和一次release直到新的press
+    bool m_keyEventEnable = false;       ///< 当突然被切换到该操作器时，防止前一个操作器的release事件没有处理
+    bool m_mouseEventEnable = false;     ///< 当突然被切换到该操作器时，防止前一个操作器的release事件没有处理
+    bool m_mouseMoveEventEnable = false; ///< press和doubleClick按下后触发move事件
 };
 
 #endif // INTERACTIVEMAP_H

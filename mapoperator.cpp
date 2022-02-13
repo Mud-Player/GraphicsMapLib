@@ -35,12 +35,10 @@ void MapEllipseOperator::end()
 bool MapEllipseOperator::mouseDoubleClickEvent(QMouseEvent *event)
 {
     skipOnceMouseEvent();
-    ignoreMouseMoveEvent();
     // finish
     if(event->buttons() & Qt::LeftButton) {
         detach();
         emit completed();
-        return false;
     }
     return false;
 }
@@ -50,13 +48,13 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
     m_first  = m_map->toCoordinate(event->pos());
     // we should ignore event whatever we press at EditOnly mode
     if(mode() == EditOnly) {
+        skipOnceMouseEvent();
         return false;
     }
     // just create one
     else if(mode() == CreateOnly) {
         detach();
         m_first  = m_map->toCoordinate(event->pos());
-        acceptMouseMoveEvent();
         return true;
     }
     // else, do creating operation
@@ -70,7 +68,6 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
             }
         }
         detach();
-        acceptMouseMoveEvent();
         return true;
     }
     return false;
@@ -78,15 +75,8 @@ bool MapEllipseOperator::mousePressEvent(QMouseEvent *event)
 
 bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(!m_ellipse) {
-        ignoreMouseMoveEvent();
-        skipOnceMouseEvent();
+    if(!m_ellipse)
         return false;
-    }
-    // we should ignore event whatever we press at EditOnly mode
-    if(mode() == EditOnly) {
-        return false;
-    }
     // Check that if the two point is too close
     auto point0 = m_map->toPoint(m_first);
     auto point1 = event->pos();
@@ -95,7 +85,6 @@ bool MapEllipseOperator::mouseReleaseEvent(QMouseEvent *event)
     }
     auto second =  m_map->toCoordinate(point1);
     m_ellipse->setRect(m_first, second);
-    ignoreMouseMoveEvent();
     return true;
 }
 
@@ -183,7 +172,8 @@ bool MapPolygonOperator::mouseDoubleClickEvent(QMouseEvent *event)
 bool MapPolygonOperator::mousePressEvent(QMouseEvent *event)
 {
     if(m_mode == EditOnly) {
-
+        skipOnceMouseEvent();
+        return false;
     }
     m_pressPos = event->pos();
     return false;
@@ -494,6 +484,7 @@ void MapRectOperator::end()
 bool MapRectOperator::mousePressEvent(QMouseEvent *event)
 {
     if(mode() == EditOnly) {
+        skipOnceMouseEvent();
         return false;
     }
     // CreateOnly & CreateEdit
@@ -509,8 +500,6 @@ bool MapRectOperator::mousePressEvent(QMouseEvent *event)
     detach();
 
     m_first  = m_map->toCoordinate(event->pos());
-    //
-    acceptMouseMoveEvent();
     return true;
 }
 
@@ -518,7 +507,6 @@ bool MapRectOperator::mouseDoubleClickEvent(QMouseEvent *event)
 {
     // todo: ignore release event and move event because doubleClick will prepagate that event
     skipOnceMouseEvent();
-    ignoreMouseMoveEvent();
 
     // finish
     if(event->buttons() & Qt::LeftButton) {
@@ -531,22 +519,16 @@ bool MapRectOperator::mouseDoubleClickEvent(QMouseEvent *event)
 
 bool MapRectOperator::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(mode() == EditOnly) {
+    if(!m_rect)
         return false;
-    }
-    ignoreMouseMoveEvent();
-
-    auto second =  m_map->toCoordinate(event->pos());
     // Check that if the two point is too close, we should delete such an rect
     auto point0 = m_map->toPoint(m_first);
-    auto point1 = m_map->toPoint(second);
+    auto point1 = event->pos();
     if((point0 - point1).manhattanLength() < 50) {
-        delete m_rect;
-        m_rect = nullptr;
-        return true;
+        point1 = point0 + QPoint(25, 25);
     }
+    auto second =  m_map->toCoordinate(point1);
     m_rect->setRect(m_first, second);
-    emit completed();
 
     return false;
 }

@@ -221,30 +221,40 @@ bool MapOperator::handleKeyReleaseEvent(QKeyEvent *event)
 
 bool MapOperator::handleMousePressEvent(QMouseEvent *event)
 {
+    // press event means a new event round
     m_mouseEventEnable = true;
-    m_skipOnceMouseEvent = false;   // we have to disable it in here
+    m_mouseMoveEventEnable = true;
     return mousePressEvent(event);
 }
 
 bool MapOperator::handleMouseMoveEvent(QMouseEvent *event)
 {
-    if(m_enableMouseMoveEvent && m_mouseEventEnable)
+    // we should propagate event when we in case of mouseTracking
+    if(m_mouseMoveTrackingEnable) {
        return mouseMoveEvent(event);
+    }
+    else if(m_mouseEventEnable && m_mouseMoveEventEnable && !m_skipOnceMouseEvent)
+       return mouseMoveEvent(event);
+
     return false;
 }
 
 bool MapOperator::handleMouseReleaseEvent(QMouseEvent *event)
 {
+    m_mouseMoveEventEnable = false;
     if(m_skipOnceMouseEvent) {
+        m_skipOnceMouseEvent = false;
         return false;
     }
-    else if(m_mouseEventEnable)
+    else if(m_mouseEventEnable) {
         return mouseReleaseEvent(event);
+    }
     return false;
 }
 
 bool MapOperator::handleMouseDoubleClickEvent(QMouseEvent *event)
 {
+    m_mouseMoveEventEnable = true;
     if(m_skipOnceMouseEvent) {
         return false;
     }
