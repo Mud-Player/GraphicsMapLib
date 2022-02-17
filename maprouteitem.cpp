@@ -176,6 +176,7 @@ const QVector<MapObjectItem*> &MapRouteItem::setPoints(const QVector<MapObjectIt
 
     // delete previous
     qDeleteAll(m_points);
+    m_points.clear();
 
     // make up the newly
     m_points = points;
