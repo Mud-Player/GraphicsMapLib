@@ -33,6 +33,8 @@ public:
     /// 获取多边形顶点
     const QVector<QGeoCoordinate> &points() const;
     int count();
+    /// 获取某个点的位置
+    const QGeoCoordinate &at(int i) const;
 
 public:
     /// 获取所有的实例
