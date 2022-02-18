@@ -117,6 +117,11 @@ int MapPolygonItem::count()
     return m_coords.size();
 }
 
+const QGeoCoordinate &MapPolygonItem::at(int i) const
+{
+    return m_coords.at(i);
+}
+
 const QSet<MapPolygonItem *> &MapPolygonItem::items()
 {
     return m_items;
