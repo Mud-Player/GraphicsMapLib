@@ -154,6 +154,20 @@ const QSizeF &MapRectItem::size() const
     return m_size;
 }
 
+QVector<QGeoCoordinate> MapRectItem::points() const
+{
+    QVector<QGeoCoordinate> points;
+    auto leftCoord = m_center.atDistanceAndAzimuth(m_size.width()/2, -90);
+    auto rightCoord = m_center.atDistanceAndAzimuth(m_size.height()/2, 90);
+    auto topCoord = m_center.atDistanceAndAzimuth(m_size.height()/2, 0);
+    auto bottomCoord = m_center.atDistanceAndAzimuth(m_size.height()/2, 180);
+    points.append({topCoord.latitude(), leftCoord.longitude(), 0});
+    points.append({topCoord.latitude(), rightCoord.longitude(), 0});
+    points.append({bottomCoord.latitude(), rightCoord.longitude(), 0});
+    points.append({bottomCoord.latitude(), leftCoord.longitude(), 0});
+    return points;
+}
+
 const QSet<MapRectItem *> &MapRectItem::items()
 {
     return m_items;

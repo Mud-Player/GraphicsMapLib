@@ -29,6 +29,8 @@ public:
     const QGeoCoordinate &center() const;
     /// 获取尺寸
     const QSizeF &size() const;
+    /// 获取四个点的坐标,顺时针方向，左上角为第一个点
+    QVector<QGeoCoordinate> points() const;
 
 public:
     /// 获取所有的实例
