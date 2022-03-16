@@ -80,7 +80,7 @@ private:
     QGeoCoordinate          m_coord;
     QGraphicsEllipseItem    m_border;
     QGraphicsSimpleTextItem m_text;
-    MapRouteItem           *m_route;
+    MapRouteItem           *m_route = nullptr;
     //
     bool m_enableMouse = true;
     bool m_checkable = false;
