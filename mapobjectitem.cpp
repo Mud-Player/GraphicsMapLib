@@ -255,6 +255,15 @@ void MapObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 void MapObjectItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsPixmapItem::mousePressEvent(event);
+
+    if(event->buttons() & Qt::RightButton){
+        if(m_enableMouse)
+            event->accept();
+        emit menuRequest();
+        return;
+    }
+
+
     if(m_enableMouse)
         event->accept();
     // else will no longer propagate event to mouseMoveEvent and mouseReleaseEvent
