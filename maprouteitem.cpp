@@ -236,6 +236,7 @@ void MapRouteItem::updatePolyline()
     for(int i = 1; i < m_points.size(); ++i) {
         path.lineTo(GraphicsMap::toScene(m_points.at(i)->coordinate()));
     }
+
     setPath(path);
 }
 

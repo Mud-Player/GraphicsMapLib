@@ -379,6 +379,7 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
         m_route = new MapRouteItem;
         m_scene->addItem(m_route);
         m_route->setMoveable(true);
+        m_route->setExclusive(true);
         m_route->setCheckable(true);
         //
         emit created(m_route);
@@ -387,6 +388,8 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
     auto index = checked.isEmpty() ? -1 : checked.last();
     // append coordinate for route
     m_route->insert(index + 1, coord)->setIcon(m_waypointIcon);
+    auto pointItem = m_route->points().at(index + 1);
+    pointItem->setText(QString::number(index + 1));  //文本不对
     m_route->setChecked(index + 1);
     return false;
 }

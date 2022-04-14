@@ -62,7 +62,6 @@ signals:
     void coordinateDragged(const QGeoCoordinate &coord);
     void rotationChanged(qreal degree);
     void routeChanged(MapRouteItem *route);
-
 protected:
     /// 获取rotation信号和移动信号
     virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
@@ -72,7 +71,6 @@ protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
-
 private:
     static QSet<MapObjectItem*> m_items;         ///< 所有实例
 
