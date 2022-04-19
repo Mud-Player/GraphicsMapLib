@@ -34,11 +34,11 @@ void MapEllipseOperator::end()
 
 bool MapEllipseOperator::keyPressEvent(QKeyEvent *event)
 {
-    if(!m_ellipse)
+   if(!m_ellipse)
         return false;
     if(event->key() == Qt::Key_Backspace) {
-        emit deleted(m_ellipse);
-        delete m_ellipse;
+      emit deleted(m_ellipse);
+        m_ellipse = nullptr;
     }
     return false;
 }
@@ -244,7 +244,7 @@ bool MapObjectOperator::keyPressEvent(QKeyEvent *event)
         return false;
     if(event->key() == Qt::Key_Backspace) {
         emit deleted(m_obj);
-        delete m_obj;
+        m_obj = nullptr;
     }
     return false;
 }
@@ -437,7 +437,7 @@ bool MapRangeLineOperator::keyPressEvent(QKeyEvent *event)
         return false;
     if(event->key() == Qt::Key_Backspace) {
         emit deleted(m_line);
-        delete m_line;
+        m_line = nullptr;
     }
     return false;
 }
@@ -523,7 +523,7 @@ bool MapRectOperator::keyPressEvent(QKeyEvent *event)
         return false;
     if(event->key() == Qt::Key_Backspace) {
         emit deleted(m_rect);
-        delete m_rect;
+        m_rect = nullptr;
     }
     return false;
 }

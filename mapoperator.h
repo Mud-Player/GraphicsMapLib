@@ -59,7 +59,7 @@ public:
     void takeOver(MapPolygonItem *item);
 signals:
     void created(MapPolygonItem *item);
-
+    void deleted(MapPolygonItem *item);
 protected:
     virtual void ready() override;
     virtual void end() override;
@@ -128,7 +128,7 @@ public:
 signals:
     ///< 创建信号
     void created(MapRouteItem *item);
-
+    void deleted(MapRouteItem *item);
 protected:
     virtual void ready() override;
     virtual void end() override;
