@@ -237,6 +237,9 @@ void MapRouteItem::updatePolyline()
         path.lineTo(GraphicsMap::toScene(m_points.at(i)->coordinate()));
     }
 
+    for(int nIndex = 0; nIndex < m_points.size(); ++nIndex) {
+        m_points.at(nIndex)->setText(QString::number(nIndex));
+    }
     setPath(path);
 }
 

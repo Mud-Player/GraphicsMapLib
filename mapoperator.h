@@ -27,10 +27,11 @@ public:
     void takeOver(MapEllipseItem *item);
 signals:
     void created(MapEllipseItem *item);
-
+    void deleted(MapEllipseItem *item);
 protected:
     virtual void ready() override;
     virtual void end() override;
+    virtual bool keyPressEvent(QKeyEvent *event) override;
     virtual bool mouseDoubleClickEvent(QMouseEvent *) override;
     virtual bool mousePressEvent(QMouseEvent *event) override;
     virtual bool mouseReleaseEvent(QMouseEvent *event) override;
@@ -90,10 +91,11 @@ public:
 
 signals:
     void created(MapObjectItem *item);
-
+    void deleted(MapObjectItem *item);
 protected:
     virtual void ready() override;
     virtual void end() override;
+    virtual bool keyPressEvent(QKeyEvent *event) override;
     virtual bool mousePressEvent(QMouseEvent *event) override;
     virtual bool mouseReleaseEvent(QMouseEvent *event) override;
     virtual bool mouseDoubleClickEvent(QMouseEvent *event) override;
@@ -158,10 +160,11 @@ public:
 signals:
 	///< 创建信号
 	void created(MapLineItem *item);
-
+    void deleted(MapLineItem *item);
 protected:
 	virtual void ready() override;
 	virtual void end() override;
+    virtual bool keyPressEvent(QKeyEvent *event) override;
 	virtual bool mousePressEvent(QMouseEvent *event) override;
 	virtual bool mouseReleaseEvent(QMouseEvent *event) override;
 	virtual bool mouseMoveEvent(QMouseEvent *event) override;
@@ -189,10 +192,11 @@ public:
 
 signals:
     void created(MapRectItem *item);
-
+    void deleted(MapRectItem *item);
 protected:
     virtual void ready() override;
     virtual void end() override;
+    virtual bool keyPressEvent(QKeyEvent *event) override;
     virtual bool mousePressEvent(QMouseEvent *event) override;
     virtual bool mouseDoubleClickEvent(QMouseEvent *event) override;
     virtual bool mouseReleaseEvent(QMouseEvent *event) override;

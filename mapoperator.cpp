@@ -32,6 +32,17 @@ void MapEllipseOperator::end()
     m_ellipse = nullptr;
 }
 
+bool MapEllipseOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_ellipse)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        emit deleted(m_ellipse);
+        delete m_ellipse;
+    }
+    return false;
+}
+
 bool MapEllipseOperator::mouseDoubleClickEvent(QMouseEvent *event)
 {
     skipOnceMouseEvent();
@@ -227,6 +238,17 @@ void MapObjectOperator::end()
     detach();
 }
 
+bool MapObjectOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_obj)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        emit deleted(m_obj);
+        delete m_obj;
+    }
+    return false;
+}
+
 bool MapObjectOperator::mousePressEvent(QMouseEvent *event)
 {
     if(this->mode() == EditOnly) {
@@ -409,6 +431,17 @@ void MapRangeLineOperator::end()
     m_line = nullptr;
 }
 
+bool MapRangeLineOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_line)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        emit deleted(m_line);
+        delete m_line;
+    }
+    return false;
+}
+
 bool MapRangeLineOperator::mousePressEvent(QMouseEvent *event)
 {
     if (!(event->buttons() & Qt::LeftButton)) {
@@ -482,6 +515,17 @@ void MapRectOperator::end()
     if(m_rect)
         m_rect->setEditable(false);
     m_rect = nullptr;
+}
+
+bool MapRectOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_rect)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        emit deleted(m_rect);
+        delete m_rect;
+    }
+    return false;
 }
 
 bool MapRectOperator::mousePressEvent(QMouseEvent *event)
