@@ -32,6 +32,17 @@ void MapEllipseOperator::end()
     m_ellipse = nullptr;
 }
 
+bool MapEllipseOperator::keyPressEvent(QKeyEvent *event)
+{
+   if(!m_ellipse)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+      emit deleted(m_ellipse);
+        m_ellipse = nullptr;
+    }
+    return false;
+}
+
 bool MapEllipseOperator::mouseDoubleClickEvent(QMouseEvent *event)
 {
     skipOnceMouseEvent();
@@ -227,6 +238,17 @@ void MapObjectOperator::end()
     detach();
 }
 
+bool MapObjectOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_obj)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        emit deleted(m_obj);
+        m_obj = nullptr;
+    }
+    return false;
+}
+
 bool MapObjectOperator::mousePressEvent(QMouseEvent *event)
 {
     if(this->mode() == EditOnly) {
@@ -379,6 +401,7 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
         m_route = new MapRouteItem;
         m_scene->addItem(m_route);
         m_route->setMoveable(true);
+        m_route->setExclusive(true);
         m_route->setCheckable(true);
         //
         emit created(m_route);
@@ -387,6 +410,8 @@ bool MapRouteOperator::mouseReleaseEvent(QMouseEvent *event)
     auto index = checked.isEmpty() ? -1 : checked.last();
     // append coordinate for route
     m_route->insert(index + 1, coord)->setIcon(m_waypointIcon);
+    auto pointItem = m_route->points().at(index + 1);
+    pointItem->setText(QString::number(index + 1));  //文本不对
     m_route->setChecked(index + 1);
     return false;
 }
@@ -404,6 +429,17 @@ void MapRangeLineOperator::end()
 {
     MapOperator::end();
     m_line = nullptr;
+}
+
+bool MapRangeLineOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_line)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        emit deleted(m_line);
+        m_line = nullptr;
+    }
+    return false;
 }
 
 bool MapRangeLineOperator::mousePressEvent(QMouseEvent *event)
@@ -479,6 +515,17 @@ void MapRectOperator::end()
     if(m_rect)
         m_rect->setEditable(false);
     m_rect = nullptr;
+}
+
+bool MapRectOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_rect)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        emit deleted(m_rect);
+        m_rect = nullptr;
+    }
+    return false;
 }
 
 bool MapRectOperator::mousePressEvent(QMouseEvent *event)
