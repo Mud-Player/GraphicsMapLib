@@ -65,7 +65,6 @@ void MapTrailItem::detach()
     if(m_attachObj)
         disconnect(m_attachObj, &MapObjectItem::coordinateChanged, this, &MapTrailItem::addCoordinate);
     m_attachObj = nullptr;
-    clear();
 }
 
 const QSet<MapTrailItem *> &MapTrailItem::items()

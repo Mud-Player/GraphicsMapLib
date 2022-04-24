@@ -37,7 +37,7 @@ bool MapEllipseOperator::keyPressEvent(QKeyEvent *event)
    if(!m_ellipse)
         return false;
     if(event->key() == Qt::Key_Backspace) {
-      emit deleted(m_ellipse);
+        emit deleted(m_ellipse);
         m_ellipse = nullptr;
     }
     return false;

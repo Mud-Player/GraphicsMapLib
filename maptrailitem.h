@@ -21,9 +21,9 @@ public:
     void addCoordinate(const QGeoCoordinate &coord);
     /// 清除轨迹
     void clear();
-    /// 依附到地图对象，将会自动更新位置
+    /// 依附到地图对象，清除已存在的航迹，将会自动更新位置
     void attach(MapObjectItem *obj);
-    /// 取消依附地图对象，后续手动更新位置
+    /// 取消依附地图对象，后续手动更新位置，如需清除航迹，请手动清除
     void detach();
 
 public:
