@@ -221,6 +221,16 @@ MapRouteItem *MapObjectItem::route() const
     return m_route;
 }
 
+void MapObjectItem::setSpeed(double speed)
+{
+    m_speed = speed;
+}
+
+const double MapObjectItem::getSpeed() const
+{
+    return m_speed;
+}
+
 const QSet<MapObjectItem *> &MapObjectItem::items()
 {
     return m_items;

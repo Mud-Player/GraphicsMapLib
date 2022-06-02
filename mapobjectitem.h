@@ -47,7 +47,9 @@ public:
     /// 绑定的航线信息
     void setRoute(MapRouteItem *route);
     MapRouteItem *route() const;
-
+    /// 节点速度  note:支持航路节点速度存储 亦可指代当前节点初始速度
+    void setSpeed(double speed);
+    const double getSpeed() const;
 public:
     /// 获取所有的实例
     static const QSet<MapObjectItem*> &items();
@@ -86,6 +88,8 @@ private:
     bool m_checked = false;
     //
     QPoint m_pressPos;
+    // 节点速度  note:支持航路节点速度存储 亦可指代当前节点初始速度
+    double m_speed;
 };
 
 #endif // MAPOBJECTITEM_H
