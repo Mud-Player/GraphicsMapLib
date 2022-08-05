@@ -39,8 +39,10 @@ add_library(${PROJECT_NAME} SHARED
   maptrailitem.h
   maprectitem.cpp
   maprectitem.h
-  mapobjecttooltipitem.h
-  mapobjecttooltipitem.cpp
+  maptableitem.h
+  maptableitem.cpp
+  mapscutcheonitem.h
+  mapscutcheonitem.cpp
 )
 add_library(Lib::GraphicsMap ALIAS ${PROJECT_NAME})
 

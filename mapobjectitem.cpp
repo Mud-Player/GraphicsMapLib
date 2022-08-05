@@ -1,5 +1,7 @@
 ﻿#include "mapobjectitem.h"
 #include "graphicsmap.h"
+#include "maptableitem.h"
+#include "mapscutcheonitem.h"
 #include <QGraphicsColorizeEffect>
 #include <QGraphicsSceneEvent>
 #include <QDebug>
@@ -73,6 +75,61 @@ MapObjectItem::MapObjectItem(const QGeoCoordinate &coord)
     //
     m_items.insert(this);
 
+    //m_Suct = new MapTableItem(coord, this);
+    m_Suct = new MapSuctcheonItem(this);
+    m_Suct->setBackBrush(QColor(30,144,255, 200));
+    m_Suct->addField(u8"编号", true);
+    m_Suct->addField(u8"名称", true);
+    m_Suct->addField(u8"经度", false);
+    m_Suct->addField(u8"维度", false);
+    m_Suct->addField(u8"高度", false);
+    m_Suct->addField(u8"方位角", false);
+    m_Suct->addField(u8"俯仰角", false);
+    m_Suct->addField(u8"滚转角", false);
+    m_Suct->addField(u8"速度", false);
+//    m_Suct->addField(u8"转速", false);
+//    m_Suct->addField(u8"余油量", false);
+//    m_Suct->addField(u8"已飞航程", false);
+    m_Suct->setValue(u8"编号", u8"");
+    m_Suct->setValue(u8"名称", u8"");
+    m_Suct->setValue(u8"经度", u8"0°");
+    m_Suct->setValue(u8"维度", u8"0°");
+    m_Suct->setValue(u8"高度", u8"0");
+    m_Suct->setValue(u8"方位角", u8"0°");
+    m_Suct->setValue(u8"俯仰角", u8"0°");
+    m_Suct->setValue(u8"滚转角", u8"0°");
+    m_Suct->setValue(u8"速度", u8"0");
+//    m_Suct->setValue(u8"转速", u8"0");
+//    m_Suct->setValue(u8"余油量", u8"0");
+//    m_Suct->setValue(u8"已飞航程", u8"0");
+
+    QPen pen;
+    pen.setColor(QColor(255, 255, 255));
+    m_Suct->setFieldPen(u8"编号", pen);
+    m_Suct->setFieldPen(u8"名称", pen);
+    m_Suct->setFieldPen(u8"经度", pen);
+    m_Suct->setFieldPen(u8"维度", pen);
+    m_Suct->setFieldPen(u8"高度", pen);
+    m_Suct->setFieldPen(u8"方位角", pen);
+    m_Suct->setFieldPen(u8"俯仰角", pen);
+    m_Suct->setFieldPen(u8"滚转角", pen);
+    m_Suct->setFieldPen(u8"速度", pen);
+//    m_Suct->setFieldPen(u8"转速", pen);
+//    m_Suct->setFieldPen(u8"余油量", pen);
+//    m_Suct->setFieldPen(u8"已飞航程", pen);
+    m_Suct->setValuePen(u8"编号", pen);
+    m_Suct->setValuePen(u8"名称", pen);
+    m_Suct->setValuePen(u8"经度", pen);
+    m_Suct->setValuePen(u8"维度", pen);
+    m_Suct->setValuePen(u8"高度", pen);
+    m_Suct->setValuePen(u8"方位角", pen);
+    m_Suct->setValuePen(u8"俯仰角", pen);
+    m_Suct->setValuePen(u8"滚转角", pen);
+    m_Suct->setValuePen(u8"速度", pen);
+//    m_Suct->setValuePen(u8"转速", pen);
+//    m_Suct->setValuePen(u8"余油量", pen);
+//    m_Suct->setValuePen(u8"已飞航程", pen);
+
     //
     setCoordinate(coord);
 }
@@ -95,6 +152,21 @@ void MapObjectItem::setCoordinate(const QGeoCoordinate &coord)
 const QGeoCoordinate &MapObjectItem::coordinate() const
 {
     return m_coord;
+}
+
+void MapObjectItem::setEuler(const QVector3D &euler)
+{
+    if(m_euler == euler)
+        return;
+
+    m_euler = euler;
+    this->setRotation(euler.x());
+    emit eulerChanged(euler);
+}
+
+const QVector3D &MapObjectItem::euler() const
+{
+    return m_euler;
 }
 
 void MapObjectItem::setIcon(const QPixmap &pixmap)
@@ -239,6 +311,8 @@ const QSet<MapObjectItem *> &MapObjectItem::items()
 QVariant MapObjectItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
 {
    if(change == ItemRotationHasChanged) {
+//       auto rotate = this->rotation();
+//       m_Suct->setRotation(-rotate);
        emit rotationChanged(this->rotation());
    }
    return QGraphicsPixmapItem::itemChange(change, value);

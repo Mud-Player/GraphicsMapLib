@@ -11,6 +11,7 @@ class MapRangeRingItem;
 class MapTrailItem;
 class MapLineItem;
 class MapRectItem;
+class MapTableItem;
 
 /*!
  * \brief 圆形创建操作器
@@ -107,6 +108,45 @@ private:
     QPoint         m_pressPos;
     MapObjectItem *m_obj = nullptr;
 };
+
+/*!
+ * \brief 图标对象标签创建操作器
+ * \details
+ */
+class GRAPHICSMAPLIB_EXPORT MapScutcheonOperator : public MapOperator
+{
+    Q_OBJECT
+
+public:
+    MapScutcheonOperator(QObject *parent = nullptr);
+
+    /// 接管已经创建的对象
+    void takeOver(MapTableItem *item);
+    /// 设置是否忽略鼠标事件
+    void setIgnoreMouseEvent(bool bIgnore);
+
+    void setOffset(const QPoint &offset);
+
+    QPoint GetOffset() const {return m_Offset; }
+signals:
+    void changeOffset();
+protected:
+    virtual void ready() override;
+    virtual void end() override;
+    virtual bool keyPressEvent(QKeyEvent *event) override;
+    virtual bool mouseMoveEvent(QMouseEvent * event) override;
+    virtual bool mousePressEvent(QMouseEvent *event) override;
+    virtual bool mouseReleaseEvent(QMouseEvent *event) override;
+    virtual bool mouseDoubleClickEvent(QMouseEvent *event) override;
+private:
+    bool                    m_bMousePress;
+    QPoint                  m_PressPosition;
+    QPoint                  m_Offset;
+    MapTableItem            *m_toolTip;
+    bool                    m_bIgnoreEvent; // 鼠标忽略
+};
+
+
 
 /*!
  * \brief 航路创建操作器

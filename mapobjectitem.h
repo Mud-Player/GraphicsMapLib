@@ -5,6 +5,11 @@
 #include "maprouteitem.h"
 #include <QGraphicsPixmapItem>
 #include <QGeoCoordinate>
+#include <QVector3D>
+#include <QDebug>
+
+class MapTableItem;
+class MapSuctcheonItem;
 
 /*!
  * \brief 地图对象
@@ -23,6 +28,10 @@ public:
     void setCoordinate(const QGeoCoordinate &coord);
     /// 获取当前经纬度位置
     const QGeoCoordinate &coordinate() const;
+    /// 设置欧拉角  修改当前地图飞机对象
+    void setEuler(const QVector3D &euler);
+    /// 获取欧拉角
+    const QVector3D &euler() const;
     /// 设置图标，无效资源将使用默认图标
     void setIcon(const QPixmap &pixmap);
     /// 设置图标为纯色，传QColor()可以取消纯色 note: 高分辨图片对该接口性能影响较大
@@ -50,6 +59,9 @@ public:
     /// 节点速度  note:支持航路节点速度存储 亦可指代当前节点初始速度
     void setSpeed(double speed);
     const double getSpeed() const;
+
+    //MapTableItem * getMapTabel() const { return m_Suct; }
+    MapSuctcheonItem * getMapTabel() const { return m_Suct; }
 public:
     /// 获取所有的实例
     static const QSet<MapObjectItem*> &items();
@@ -61,6 +73,7 @@ signals:
     void released();
     void toggled(bool checked);
     void coordinateChanged(const QGeoCoordinate &coord);
+    void eulerChanged(const QVector3D &euler);
     void coordinateDragged(const QGeoCoordinate &coord);
     void rotationChanged(qreal degree);
     void routeChanged(MapRouteItem *route);
@@ -79,6 +92,7 @@ private:
 
 private:
     QGeoCoordinate          m_coord;
+    QVector3D               m_euler;
     QGraphicsEllipseItem    m_border;
     QGraphicsSimpleTextItem m_text;
     MapRouteItem           *m_route = nullptr;
@@ -90,6 +104,9 @@ private:
     QPoint m_pressPos;
     // 节点速度  note:支持航路节点速度存储 亦可指代当前节点初始速度
     double m_speed;
+
+    //MapTableItem	*m_Suct = nullptr; //显示标牌对象
+    MapSuctcheonItem *m_Suct = nullptr;
 };
 
 #endif // MAPOBJECTITEM_H

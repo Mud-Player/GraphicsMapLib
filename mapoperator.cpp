@@ -602,3 +602,95 @@ void MapRectOperator::detach()
         m_rect = nullptr;
     }
 }
+
+MapScutcheonOperator::MapScutcheonOperator(QObject *parent) : MapOperator(parent)
+{
+    m_Offset = QPoint(0, 0);
+    m_bMousePress = false;
+}
+
+void MapScutcheonOperator::takeOver(MapTableItem *item)
+{
+    end();
+    m_toolTip = item;
+}
+
+void MapScutcheonOperator::setIgnoreMouseEvent(bool bIgnore)
+{
+    m_bIgnoreEvent = bIgnore;
+}
+
+void MapScutcheonOperator::setOffset(const QPoint &offset)
+{
+    m_Offset = offset;
+    emit changeOffset();
+}
+
+void MapScutcheonOperator::ready()
+{
+    MapOperator::ready();
+    m_toolTip = nullptr;
+}
+
+void MapScutcheonOperator::end()
+{
+    MapOperator::end();
+//    if(m_toolTip)
+//        m_toolTip->setEditable(false);
+    m_toolTip = nullptr;
+}
+
+bool MapScutcheonOperator::keyPressEvent(QKeyEvent *event)
+{
+    if(!m_toolTip)
+        return false;
+    if(event->key() == Qt::Key_Backspace) {
+        //emit deleted(m_toolTip);
+        m_toolTip = nullptr;
+    }
+    return false;
+}
+
+bool MapScutcheonOperator::mousePressEvent(QMouseEvent *event)
+{
+    if(!m_bIgnoreEvent){
+        m_bMousePress = true;
+        m_PressPosition = event->screenPos().toPoint();
+        return true;
+    }
+    return false;
+}
+
+bool MapScutcheonOperator::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!m_bIgnoreEvent && m_bMousePress)
+    {
+        auto mousePos = event->screenPos().toPoint();
+        QPoint moveSpan = mousePos - m_PressPosition;
+        m_PressPosition = mousePos;
+        m_Offset += moveSpan;
+        emit changeOffset();
+    }
+    return false;
+}
+
+bool MapScutcheonOperator::mouseReleaseEvent(QMouseEvent *event)
+{
+    if(!m_bIgnoreEvent){
+        m_bMousePress = false;
+    }
+    return false;
+}
+
+bool MapScutcheonOperator::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    //skipOnceMouseEvent();
+
+    // finish
+    if(event->buttons() & Qt::LeftButton) {
+        //detach();
+        emit completed();
+        return false;
+    }
+    return false;
+}

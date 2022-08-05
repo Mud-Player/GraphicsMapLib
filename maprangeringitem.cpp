@@ -129,6 +129,7 @@ QRectF MapRangeRingItem::boundingRect() const
 void MapRangeRingItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(widget)
+
     // radius of ellpise
     auto ellpiseRadius = [&](const float &radius) {
         auto topCoord = m_coord.atDistanceAndAzimuth(radius * 1e3, 0);
